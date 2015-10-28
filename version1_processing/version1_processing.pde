@@ -1,13 +1,75 @@
+// hues converted to 7 notes of major scale
+// red, orange, yellow, green, cyan, blue, violet
+// https://en.wikipedia.org/wiki/Major_scale
+
 import processing.video.*;
 import ddf.minim.*;
 import ddf.minim.ugens.*;
 
+//-------------------------------------
+// User Input
+// put here your custom mp4 files in movieLocation.
+// power is the exponent for the amplitude of the histogram; allows 
+//    you to adjust relative volumes
+// cap is the buffer on either extreme of the histogram bins that you 
+//    will ignore in playback.
+
+//String movieLocation = "../../Wonderfalls.s01e03.mp4";
+//float power = 1;
+//int cap = 0;
+
+String movieLocation = "../../Coyote_Roadrunner.mp4";
+float power = 2;
+int cap = 0;
+
+//String movieLocation = "../../into_the_colorflow.mp4";
+//float power = 1;
+//int cap = 0;
+
+//String movieLocation = "../../An_Optical_Poem.mp4";
+//float power = 1;
+//int cap = 0;
+
+//-------------------------------------
+
 Minim minim;
 AudioOutput out;
 
-// http://www.phy.mtu.edu/~suits/notefreqs.html
-float[] baseFreqs = {16.35, 17.32, 18.35, 19.45, 20.60, 21.83, 
-                    23.12, 24.50, 25.96, 27.50, 29.14, 30.87};
+//// Map notes, to keys to scales
+// 1. the frequencies of notes, 2 octaves long, so we can assemble the scale from these notes
+// 2. major or minor? the delta-index between notes
+// 3. the actual notes to assign to baseFreqs
+float[] allFreqs = {Frequency.ofPitch( "C0" ).asHz(),
+                    Frequency.ofPitch( "C#0" ).asHz(),
+                    Frequency.ofPitch( "D0" ).asHz(),
+                    Frequency.ofPitch( "D#0" ).asHz(),
+                    Frequency.ofPitch( "E0" ).asHz(),
+                    Frequency.ofPitch( "F0" ).asHz(),
+                    Frequency.ofPitch( "F#0" ).asHz(),
+                    Frequency.ofPitch( "G0" ).asHz(),
+                    Frequency.ofPitch( "G#0" ).asHz(),
+                    Frequency.ofPitch( "A0" ).asHz(),
+                    Frequency.ofPitch( "A#0" ).asHz(),
+                    Frequency.ofPitch( "B0" ).asHz(),
+                    Frequency.ofPitch( "C1" ).asHz(),
+                    Frequency.ofPitch( "C#1" ).asHz(),
+                    Frequency.ofPitch( "D1" ).asHz(),
+                    Frequency.ofPitch( "D#1" ).asHz(),
+                    Frequency.ofPitch( "E1" ).asHz(),
+                    Frequency.ofPitch( "F1" ).asHz(),
+                    Frequency.ofPitch( "F#1" ).asHz(),
+                    Frequency.ofPitch( "G1" ).asHz(),
+                    Frequency.ofPitch( "G#1" ).asHz(),
+                    Frequency.ofPitch( "A1" ).asHz(),
+                    Frequency.ofPitch( "A#1" ).asHz(),
+                    Frequency.ofPitch( "B1" ).asHz()};
+
+// number of halfnote intervals between notes, starting from base note
+int[] majorIntervals = {2,2,1,2,2,2}; 
+int[] natMinorIntervals = {2,1,2,2,1,2};
+int[] harMinorIntervals = {2,1,2,2,1,3};
+// initialize with C major scale
+float[] baseFreqs = new float[7];
 int numOctaves = 7;
 int numWaves = baseFreqs.length*numOctaves;
 Oscil[] oscils;
@@ -15,49 +77,62 @@ Oscil[] oscils;
 float H;
 float S;
 float B;
+float greyThreshold = 25;
 int numPixels;
 
-// WEBCAM ----
-Capture video;
-// ---- WEBCAM
-//// MOVIE ----
-//Movie video;
-//// ---- MOVIE
+//// WEBCAM ----
+//Capture video;
+//// ---- WEBCAM
+
+// MOVIE ----
+Movie video;
+// ---- MOVIE
 
 //--------------------------------------------
 void setup() {
-  // WEBCAM ----
-  size(640, 480);
-  // ---- WEBCAM
-//  // MOVIE ----
-//  size(640, 352);
-//  // ---- MOVIE
+//  // WEBCAM ----
+//  size(640, 480);
+//  // ---- WEBCAM
+  
+  // MOVIE ----
+  size(640, 352);
+  // ---- MOVIE
+  
   minim = new Minim(this);
 
-  // WEBCAM ----
-  video = new Capture(this, width, height, 30);
-  //OR
-//  String[] cameras = Capture.list();
-//  printArray(cameras);
-//  video = new Capture(this, cameras[3]);
-  // Start capturing the images from the camera
-  video.start();
-  // ---- WEBCAM
+//  // WEBCAM ----
+//  video = new Capture(this, width, height, 30);
+//  //OR
+////  String[] cameras = Capture.list();
+////  printArray(cameras);
+////  video = new Capture(this, cameras[3]);
+//  // Start capturing the images from the camera
+//  video.start();
+//  // ---- WEBCAM
     
-//  // MOVIE ----
-//  //converted from avi with avconv -i ThisVideo.avi -codec copy ThisVideo.avi
-//    video = new Movie(this, "../../ThisVideo.mp4");
-//    video.loop();
-//    video.volume(0);
-//  //  video.read();
-//  //  println(video.width, video.height);
-//  // ---- MOVIE
+  // MOVIE ----
+  //converted from avi with avconv -i ThisVideo.avi -codec copy ThisVideo.avi
+    video = new Movie(this, movieLocation);
+    video.loop();
+    video.volume(0);
+  //  video.read();
+  //  println(video.width, video.height);
+  // ---- MOVIE
 
   background(0);
+  //--------- color
+  int[] thisScaleIntervals = natMinorIntervals;
+  int keyIndex = 0; //key of C
+  baseFreqs[0] = allFreqs[keyIndex];
+  for (int i=0; i< thisScaleIntervals.length; i++) {
+    keyIndex += thisScaleIntervals[i];
+    baseFreqs[i+1] = allFreqs[keyIndex];
+  }
   
   // use the getLineOut method of the Minim object to get an AudioOutput object
   out = minim.getLineOut();
   
+//  println(allFreqs); //debug
 //  println(baseFreqs); //debug
 //  println(numWaves); //debug
   oscils = new Oscil[numWaves];
@@ -86,15 +161,49 @@ void draw() {
     // Calculate the histogram
     for (int i=0; i<video.width*video.height; i++) {
         color thisColor = video.pixels[i];
+
+        S = saturation(thisColor); //min threshold? otherwise grey
+      if (S > greyThreshold) {
+
         // white has 0 hue - arbitrary weighting - normalize somehow with brightness or saturation?
         H = hue(thisColor);
-//        S = saturation(thisColor); //later adds baseline
+        //http://www.rapidtables.com/web/color/RGB_Color.htm
+        // hue is red to red, 0-255. 255/6 = 42.5
+        // red:0, yellow:42.5, green:85, cyan:127.5, blue:170, magenta: 212.5
+        // orange: 10-32, violet: 191.25
+        // BINS - what is predominant color
+        // red: 212.5-0-10, orange: 10-32 (center half), yellow: 32-53 (half centered on yellow), 
+        // green:53-106.25 (boundary at half), cyan: 106.25-149 (boundary at half), 
+        // blue: 149-184 (boundary third in), violet: 184-212.5 (until magenta)
+        // hue from red to violet is linear 0-255. 
+        
+        float mappedH;
+        if (H>212.5 || H<=10) {
+          mappedH = 0; //red
+        } else if (H>10 && H<=32) {
+          mappedH = 1; //orange
+        } else if (H>32 && H<=53) {
+          mappedH = 2; //yellow
+        } else if (H>53 && H<=106.25) {
+          mappedH = 3; //green
+        } else if (H>106.25 && H<=149) {
+          mappedH = 4; //cyan
+        } else if (H>149 && H<=184) {
+          mappedH = 5; //blue
+        } else {
+          mappedH = 6; //violet
+        }
+
         B = brightness(thisColor);
-        float mappedH = map(H,0,255,0,baseFreqs.length-1);
-        int thisIndex= round(baseFreqs.length*map(B,0,255,0,numOctaves-1)+mappedH);
-//        println(video.width*video.height,octaveWidth,thisIndex); //debug
+        // ignore black black, and white white, borders can max normalization
+        if (B>=cap && B<=255-cap) {
+          float mappedB = map(B,cap,255-cap,0,numOctaves-1);
+          
+          int thisIndex= round(baseFreqs.length*mappedB+mappedH);
         hist[thisIndex] += 1;         
-    } 
+        } // B 
+      } //if S
+    } //for
     
     // Find the largest value in the histogram
     float maxval = 0;
@@ -106,8 +215,10 @@ void draw() {
 //    println(maxval);
     
     // Normalize the histogram to values between 0 and 1
+    // and power the hist
     for (int i=0; i<hist.length; i++) {
       hist[i] = hist[i]/maxval;
+      hist[i] = pow(hist[i], power);
     }
     
     // Draw half of the histogram (skip every second value)
