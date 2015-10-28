@@ -33,6 +33,7 @@ int cap = 0;
 //-------------------------------------
 
 Minim minim;
+Summer sum;
 AudioOutput out;
 
 //// Map notes, to keys to scales
@@ -76,11 +77,16 @@ Oscil[] oscilsLeft;
 Oscil[] oscilsRight;
 Pan[] pansLeft;
 Pan[] pansRight;
+float kickDur = 0.8;
+float snareDur = 0.2;
+
 float H;
 float S;
 float B;
 float greyThreshold = 25;
+float kickThreshold = 4000000;
 int numPixels;
+int[] previousFrame;
 
 //// WEBCAM ----
 //Capture video;
@@ -97,9 +103,8 @@ void setup() {
 //  // ---- WEBCAM
 
   // MOVIE ----
-  size(640, 352);
+  size(640, 352, P2D);
   // ---- MOVIE
-
 
   minim = new Minim(this);
 
@@ -118,11 +123,15 @@ void setup() {
     video = new Movie(this, movieLocation);
     video.loop();
     video.volume(0);
-  //  video.read();
+    while (!video.available()) {print(".");}
+    video.read();
   //  println(video.width, video.height);
   // ---- MOVIE
 
-  background(0);
+//  background(0);
+  numPixels = video.width * video.height;
+  // Create an array to store the previously captured frame
+  previousFrame = new int[numPixels];
 //--------- color
 int[] thisScaleIntervals = majorIntervals;
 int keyIndex = 0; //key of C
@@ -134,6 +143,8 @@ for (int i=0; i< thisScaleIntervals.length; i++) {
   
   // use the getLineOut method of the Minim object to get an AudioOutput object
   out = minim.getLineOut();
+  sum = new Summer();
+  sum.patch( out );
   pansLeft = new Pan[numWaves];
   pansRight = new Pan[numWaves];
   
@@ -247,6 +258,37 @@ void draw() {
       histRight[i] = pow(histRight[i],power);
     }
     
+
+    int movementSum = 0; // Amount of movement in the frame
+    for (int i = 0; i < video.width*video.height; i++) { // For each pixel in the video frame...
+      color currColor = video.pixels[i];
+      color prevColor = previousFrame[i];
+      // Extract the red, green, and blue components from current pixel
+      int currR = (currColor >> 16) & 0xFF; // Like red(), but faster
+      int currG = (currColor >> 8) & 0xFF;
+      int currB = currColor & 0xFF;
+      // Extract red, green, and blue components from previous pixel
+      int prevR = (prevColor >> 16) & 0xFF;
+      int prevG = (prevColor >> 8) & 0xFF;
+      int prevB = prevColor & 0xFF;
+      // Compute the difference of the red, green, and blue values
+      int diffR = abs(currR - prevR);
+      int diffG = abs(currG - prevG);
+      int diffB = abs(currB - prevB);
+      // Add these differences to the running tally
+      movementSum += diffR + diffG + diffB;
+      // Render the difference image to the screen
+//      pixels[i] = color(diffR, diffG, diffB);
+      // The following line is much faster, but more confusing to read
+      //pixels[i] = 0xff000000 | (diffR << 16) | (diffG << 8) | diffB;
+      // Save the current color into the 'previous' buffer
+      previousFrame[i] = currColor;
+    }
+    println(movementSum);
+    if (movementSum > kickThreshold) {
+      out.playNote( 0, kickDur, new KickInstrument( sum ) );
+    }
+
   // MOVIE ----
     // Draw progress bar
     stroke(0,150,0);  
@@ -266,6 +308,8 @@ void draw() {
       line(x, height, x, height-floor(histRight[i]*200));
     }
     
+    ////////////////
+    // Change sounds
     for(int i = 0; i < numWaves; i++){
       oscilsLeft[i].setAmplitude( histLeft[i]/numWaves );
       oscilsRight[i].setAmplitude( histRight[i]/numWaves );
@@ -279,10 +323,10 @@ void draw() {
 }
 
 void mousePressed() {
-  // MOVIE ----
-//  println(float(mouseX)/float(width), video.duration()); // debug ****************
-  video.jump(float(mouseX)/float(width)*video.duration());
-  // ---- MOVIE
+//  // MOVIE ----
+////  println(float(mouseX)/float(width), video.duration()); // debug ****************
+//  video.jump(float(mouseX)/float(width)*video.duration());
+//  // ---- MOVIE
 }
 
 // convert colors to tones - create buckets, 12 tones of chromatic scale,
