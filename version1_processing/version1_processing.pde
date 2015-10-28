@@ -323,10 +323,10 @@ void draw() {
 }
 
 void mousePressed() {
-//  // MOVIE ----
-////  println(float(mouseX)/float(width), video.duration()); // debug ****************
-//  video.jump(float(mouseX)/float(width)*video.duration());
-//  // ---- MOVIE
+  // MOVIE ----
+//  println(float(mouseX)/float(width), video.duration()); // debug ****************
+  video.jump(float(mouseX)/float(width)*video.duration());
+  // ---- MOVIE
 }
 
 // convert colors to tones - create buckets, 12 tones of chromatic scale,
