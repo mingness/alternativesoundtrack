@@ -40,39 +40,10 @@ int cap = 0;
 // 1. the frequencies of notes, 2 octaves long, so we can assemble the scale from these notes
 // 2. major or minor? the delta-index between notes
 // 3. the actual notes to assign to baseFreqs
-float[] allFreqs = {Frequency.ofPitch( "C0" ).asHz(),
-                    Frequency.ofPitch( "C#0" ).asHz(),
-                    Frequency.ofPitch( "D0" ).asHz(),
-                    Frequency.ofPitch( "D#0" ).asHz(),
-                    Frequency.ofPitch( "E0" ).asHz(),
-                    Frequency.ofPitch( "F0" ).asHz(),
-                    Frequency.ofPitch( "F#0" ).asHz(),
-                    Frequency.ofPitch( "G0" ).asHz(),
-                    Frequency.ofPitch( "G#0" ).asHz(),
-                    Frequency.ofPitch( "A0" ).asHz(),
-                    Frequency.ofPitch( "A#0" ).asHz(),
-                    Frequency.ofPitch( "B0" ).asHz(),
-                    Frequency.ofPitch( "C1" ).asHz(),
-                    Frequency.ofPitch( "C#1" ).asHz(),
-                    Frequency.ofPitch( "D1" ).asHz(),
-                    Frequency.ofPitch( "D#1" ).asHz(),
-                    Frequency.ofPitch( "E1" ).asHz(),
-                    Frequency.ofPitch( "F1" ).asHz(),
-                    Frequency.ofPitch( "F#1" ).asHz(),
-                    Frequency.ofPitch( "G1" ).asHz(),
-                    Frequency.ofPitch( "G#1" ).asHz(),
-                    Frequency.ofPitch( "A1" ).asHz(),
-                    Frequency.ofPitch( "A#1" ).asHz(),
-                    Frequency.ofPitch( "B1" ).asHz()};
 
-// number of halfnote intervals between notes, starting from base note
-int[] majorIntervals = {2,2,1,2,2,2}; 
-int[] natMinorIntervals = {2,1,2,2,1,2};
-int[] harMinorIntervals = {2,1,2,2,1,3};
-// initialize with C major scale
-float[] baseFreqs = new float[7];
+int numBaseFreqs = 7;
 int numOctaves = 7;
-int numWaves = baseFreqs.length*numOctaves;
+int numWaves = numBaseFreqs*numOctaves;
 float H;
 float S;
 float B;
@@ -125,24 +96,7 @@ void setup() {
   // ---- MOVIE
 
   background(0);
-//--------- color
-int[] thisScaleIntervals = majorIntervals;
-int keyIndex = 0; //key of C
-baseFreqs[0] = allFreqs[keyIndex];
-for (int i=0; i< thisScaleIntervals.length; i++) {
-  keyIndex += thisScaleIntervals[i];
-  baseFreqs[i+1] = allFreqs[keyIndex];
-}
 
-//  println(allFreqs); //debug
-//  println(baseFreqs); //debug
-//  println(numWaves); //debug
-
-  float freq;
-  for(int i = 0; i < numWaves; i++){
-    freq = baseFreqs[i % baseFreqs.length] * pow(2,floor(i/baseFreqs.length));
-//    println(freq); //debug ********************************************
-  }
 // SUPERCOLLIDER ----
   oscP5 = new OscP5(this,12000);
   supercollider = new NetAddress("127.0.0.1",57120);
@@ -159,7 +113,8 @@ void draw() {
     video.loadPixels(); // Make its pixels[] array available
     image(video,0,0,width, height);
 
-    float[] hist = new float[numWaves];
+    float[] histLeft = new float[numWaves];
+    float[] histRight = new float[numWaves];
 
     // Calculate the histogram
     for (int i=0; i<video.width*video.height; i++) {
@@ -202,45 +157,67 @@ void draw() {
         if (B>=cap && B<=255-cap) {
           float mappedB = map(B,cap,255-cap,0,numOctaves-1);
           
-          int thisIndex= round(baseFreqs.length*mappedB+mappedH);
-        hist[thisIndex] += 1;         
+          int thisIndex= round(numBaseFreqs*mappedB+mappedH);
+          if ((i % width) < (width/2)) {
+            //left
+            histLeft[thisIndex] += 1;  
+          } else {
+            //right
+            histRight[thisIndex] += 1;  
+          }            
         } // B 
       } //if S
     } //for
     
     // Find the largest value in the histogram
-    float maxval = 0;
-    for (int i=0; i<hist.length; i++) {
-      if(hist[i] > maxval) {
-        maxval = hist[i];
+    float maxvalLeft = 0;
+    float maxvalRight = 0;
+    for (int i=0; i<histLeft.length; i++) {
+      if(histLeft[i] > maxvalLeft) {
+        maxvalLeft = histLeft[i];
+      }  
+      if(histRight[i] > maxvalRight) {
+        maxvalRight = histRight[i];
       }  
     }
 //    println(maxval);
     
     // Normalize the histogram to values between 0 and 0.5 (normalization to 1 causes distortion)
     // and power the hist
-    for (int i=0; i<hist.length; i++) {
-      hist[i] = hist[i]/maxval/2;
-      hist[i] = pow(hist[i], power);
+    for (int i=0; i<histLeft.length; i++) {
+      histLeft[i] = histLeft[i]/maxvalLeft/2;
+      histLeft[i] = pow(histLeft[i],power);
+      histRight[i] = histRight[i]/maxvalRight/2;
+      histRight[i] = pow(histRight[i],power);
     }
+    
+  // MOVIE ----
+    // Draw progress bar
+    stroke(0,150,0);  
+    strokeWeight(4);  
+    line(0,height-2,video.time()/video.duration()*width,height-2);
+  // ---- MOVIE
     
     // Draw half of the histogram (skip every second value)
     stroke(255);
-    for (int i=0; i<hist.length; i++) {
-      int x = floor(map(i,0,hist.length,0,width));
-      line(x, height, x, height-floor(hist[i]*200));
+    strokeWeight(1);
+    for (int i=0; i<histLeft.length; i++) {
+      int x = floor(map(i,0,histLeft.length,0,width/2));
+      line(x, height, x, height-floor(histLeft[i]*200));
     }
-    
+    for (int i=0; i<histRight.length; i++) {
+      int x = floor(map(i,0,histRight.length,width/2,width));
+      line(x, height, x, height-floor(histRight[i]*200));
+    }    
     
 // SUPERCOLLIDER ----
-    /* in the following different ways of creating osc messages are shown by example */
     OscMessage myMessage = new OscMessage(addr);
         
-    for (int i=0; i<hist.length; i++) {
-      myMessage.add(hist[i]); 
+    for (int i=0; i<histLeft.length; i++) {
+      myMessage.add(histLeft[i]); 
     }
-    for (int i=0; i<hist.length; i++) {
-      myMessage.add(hist[i]); 
+    for (int i=0; i<histRight.length; i++) {
+      myMessage.add(histRight[i]); 
     }
   
     /* send the message */
@@ -251,6 +228,14 @@ void draw() {
   
   } // if video available
 }
+
+void mousePressed() {
+  // MOVIE ----
+//  println(float(mouseX)/float(width), video.duration()); // debug ****************
+  video.jump(float(mouseX)/float(width)*video.duration());
+  // ---- MOVIE
+}
+
 // convert colors to tones - create buckets, 12 tones of chromatic scale,
 // 6 colors R Y G C B M half to create 12 colors
 // dark and light relates to harmonics (or amplitude)
