@@ -144,7 +144,7 @@ for (int i=0; i< thisScaleIntervals.length; i++) {
 //    println(freq); //debug ********************************************
   }
 // SUPERCOLLIDER ----
-  oscP5 = new OscP5(this,57120);
+  oscP5 = new OscP5(this,12000);
   supercollider = new NetAddress("127.0.0.1",57120);
 // ---- SUPERCOLLIDER
 }
@@ -217,10 +217,10 @@ void draw() {
     }
 //    println(maxval);
     
-    // Normalize the histogram to values between 0 and 1
+    // Normalize the histogram to values between 0 and 0.5 (normalization to 1 causes distortion)
     // and power the hist
     for (int i=0; i<hist.length; i++) {
-      hist[i] = hist[i]/maxval;
+      hist[i] = hist[i]/maxval/2;
       hist[i] = pow(hist[i], power);
     }
     
@@ -236,7 +236,12 @@ void draw() {
     /* in the following different ways of creating osc messages are shown by example */
     OscMessage myMessage = new OscMessage(addr);
         
-    myMessage.add(hist[hist.length/2]); 
+    for (int i=0; i<hist.length; i++) {
+      myMessage.add(hist[i]); 
+    }
+    for (int i=0; i<hist.length; i++) {
+      myMessage.add(hist[i]); 
+    }
   
     /* send the message */
     oscP5.send(myMessage, supercollider); 
