@@ -1,7 +1,5 @@
 package altsoundtrack;
 
-import java.util.ArrayList;
-
 import netP5.NetAddress;
 import oscP5.OscMessage;
 import oscP5.OscP5;
@@ -66,17 +64,10 @@ public class AltSoundtrack2 extends PApplet {
 	}
 
 	public static void main(String[] args) {
-		ArrayList<String> options = new ArrayList<String>();
-		options.add("--bgcolor=#000000");
-		// options.add("--display=0");
-		// options.add("--full-screen");
-		options.add("--hide-stop");
-		options.add("altsoundtrack.AltSoundtrack2");
-		String[] optionsArray = new String[options.size()];
-		optionsArray = options.toArray(optionsArray);
+		String[] options = { "--bgcolor=#000000", "--hide-stop",
+				"altsoundtrack.AltSoundtrack2" };
 
-		PApplet.main(optionsArray);
-
+		PApplet.main(options);
 	}
 
 }
