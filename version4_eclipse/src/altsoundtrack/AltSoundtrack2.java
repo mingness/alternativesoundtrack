@@ -11,6 +11,9 @@ import analysis.TestAnalysis1;
 public class AltSoundtrack2 extends PApplet {
 	private OscP5 osc;
 	private NetAddress supercollider;
+	private Config cfg;
+	@SuppressWarnings("unused")
+	private ConfigManager cfgManager;
 
 	private final float[] L = new float[15];
 	private final float[] R = new float[15];
@@ -25,13 +28,23 @@ public class AltSoundtrack2 extends PApplet {
 
 	@Override
 	public void setup() {
-		frameRate(30);
+		// Set up configuration
+		cfg = new Config();
+		cfgManager = new ConfigManager("altSoundtrackConfig.json", cfg);
 
 		osc = new OscP5(this, 12000);
-		supercollider = new NetAddress("127.0.0.1", 57120);
+		supercollider = new NetAddress(cfg.supercolliderIp,
+				cfg.supercolliderPort);
 
+		frameRate(cfg.frameRate);
+
+		// just an example of a class, will be gone
 		ta = new TestAnalysis1();
+
+		// All prints at the end, because instantiating OSC prints
+		// a lot of stuff to the console.
 		println(ta.getX());
+		printArray(cfg.movieFilenames);
 	}
 
 	@Override
