@@ -20,7 +20,6 @@ import com.cedarsoftware.util.io.JsonWriter;
  */
 public class ConfigManager {
 	private final String path;
-	private Config cfg;
 
 	/**
 	 * @param path
@@ -29,23 +28,14 @@ public class ConfigManager {
 	 *            Object containing the configuration (a bunch of public
 	 *            properties)
 	 */
-	public ConfigManager(String path, Config cfg) {
+	public ConfigManager(String path) {
 		this.path = path;
-		this.cfg = cfg;
-
-		if (configExists()) {
-			load();
-		}
-		// Save it, in case the Config class has new properties which are
-		// not yet in the json file. This will add the missing properties
-		// to the file.
-		save();
 	}
 
 	/**
 	 * Saves the properties found in the Config object to the json file
 	 */
-	public void save() {
+	public void save(Config cfg) {
 		try {
 			Map<String, Object> args = new HashMap<String, Object>();
 			args.put(JsonWriter.PRETTY_PRINT, true);
@@ -62,16 +52,19 @@ public class ConfigManager {
 	/**
 	 * Loads the json file into the Config object
 	 */
-	public void load() {
+	public Config load() {
 		try {
 			FileInputStream fileIn = new FileInputStream(path);
 			JsonReader reader = new JsonReader(fileIn);
-			cfg = (Config) reader.readObject();
+			Config cfg = (Config) reader.readObject();
+			System.out.println(cfg.movieFilenames[0]);
 			reader.close();
 			fileIn.close();
+			return cfg;
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+		return null;
 	}
 
 	/**
