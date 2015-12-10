@@ -1,53 +1,86 @@
 package altsoundtrack;
 
+import java.io.File;
+
 import netP5.NetAddress;
 import oscP5.OscMessage;
 import oscP5.OscP5;
 import processing.core.PApplet;
-import analysis.TestAnalysis1;
+import processing.video.Movie;
 
 public class AltSoundtrack2 extends PApplet {
+	// OSC
 	private OscP5 osc;
 	private NetAddress supercollider;
+
+	// Config
 	private Config cfg;
 	@SuppressWarnings("unused")
 	private ConfigManager cfgManager;
 
+	// Video
+	Movie video;
+
+	// Other
 	private final float[] L = new float[15];
 	private final float[] R = new float[15];
 
-	private TestAnalysis1 ta;
-
+	/*
+	 * (non-Javadoc)
+	 * @see processing.core.PApplet#settings()
+	 */
 	@Override
 	public void settings() {
 		size(600, 600);
 		// fullScreen();
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see processing.core.PApplet#setup()
+	 */
 	@Override
 	public void setup() {
-		// Set up configuration
-		cfg = new Config();
-		cfgManager = new ConfigManager("altSoundtrackConfig.json", cfg);
+		// Config
+		cfgManager = new ConfigManager("altSoundtrackConfig.json");
+		if (cfgManager.configExists()) {
+			cfg = cfgManager.load();
+		} else {
+			cfg = new Config();
+		}
 
+		// OSC
 		osc = new OscP5(this, 12000);
 		supercollider = new NetAddress(cfg.supercolliderIp,
 				cfg.supercolliderPort);
 
+		File f = new File(sketchPath() + File.separator + cfg.moviePath
+				+ File.separator + cfg.movieFilenames[0]);
+
+		// Movie
+		video = new Movie(this, f.getAbsolutePath());
+		video.loop();
+		video.volume(0);
+
 		frameRate(cfg.frameRate);
-
-		// just an example of a class, will be gone
-		ta = new TestAnalysis1();
-
-		// All prints at the end, because instantiating OSC prints
-		// a lot of stuff to the console.
-		println(ta.getX());
-		printArray(cfg.movieFilenames);
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see processing.core.PApplet#draw()
+	 */
 	@Override
 	public void draw() {
+		if (!video.available()) {
+			return;
+		}
+		video.read();
+		video.loadPixels();
+
 		background(0);
+
+		image(video, 0, 0);
+
 		fill(255);
 		text("Sending noise to Supercollider", 20, frameCount % height);
 
@@ -65,7 +98,7 @@ public class AltSoundtrack2 extends PApplet {
 
 	public static void main(String[] args) {
 		String[] options = { "--bgcolor=#000000", "--hide-stop",
-				"altsoundtrack.AltSoundtrack2" };
+		"altsoundtrack.AltSoundtrack2" };
 
 		PApplet.main(options);
 	}
