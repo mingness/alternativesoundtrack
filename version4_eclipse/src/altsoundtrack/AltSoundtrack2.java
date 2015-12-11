@@ -15,15 +15,22 @@ public class AltSoundtrack2 extends PApplet {
 
 	// Config
 	private Config cfg;
-	@SuppressWarnings("unused")
 	private ConfigManager cfgManager;
 
 	// Video
 	Movie video;
 
-	// Other
-	private final float[] L = new float[15];
-	private final float[] R = new float[15];
+	// Analysis
+	int numBaseFreqs = 7;
+	int numOctaves = 7;
+	int numWaves = numBaseFreqs * numOctaves;
+	float[] histLeft = new float[numWaves];
+	float[] histRight = new float[numWaves];
+	float H, S, B;
+	float greyThreshold = 25;
+	int numPixels;
+	int cap = 0;
+	float power = 2;
 
 	/*
 	 * (non-Javadoc)
@@ -77,23 +84,95 @@ public class AltSoundtrack2 extends PApplet {
 		video.read();
 		video.loadPixels();
 
-		background(0);
-
 		image(video, 0, 0);
 
-		fill(255);
-		text("Sending noise to Supercollider", 20, frameCount % height);
+		numPixels = video.width * video.height;
 
-		for (int i = 0; i < L.length; i++) {
-			L[i] = 0.5f * abs(noise(i * 0.08f, 0.1f, frameCount * 0.1f) - 0.5f);
-			R[i] = 0.5f * abs(noise(i * 0.08f, 0.5f, frameCount * 0.1f) - 0.5f);
+		// Calculate the histogram
+		for (int i = 0; i < numPixels; i++) {
+			int thisColor = video.pixels[i];
+
+			S = saturation(thisColor); // min threshold? otherwise grey
+			if (S > greyThreshold) {
+
+				H = hue(thisColor);
+
+				float mappedH;
+				if (H > 212.5 || H <= 10) {
+					mappedH = 0; // red
+				} else if (H <= 32) {
+					mappedH = 1; // orange
+				} else if (H <= 53) {
+					mappedH = 2; // yellow
+				} else if (H <= 106.25) {
+					mappedH = 3; // green
+				} else if (H <= 149) {
+					mappedH = 4; // cyan
+				} else if (H <= 184) {
+					mappedH = 5; // blue
+				} else {
+					mappedH = 6; // violet
+				}
+
+				B = brightness(thisColor);
+				// ignore black black, and white white, borders can max
+				// normalization
+				if (B >= cap && B <= 255 - cap) {
+					float mappedB = map(B, cap, 255 - cap, 0, numOctaves - 1);
+
+					int thisIndex = round(numBaseFreqs * mappedB + mappedH);
+					if ((i % width) < (width / 2)) {
+						// left
+						histLeft[thisIndex] += 1;
+					} else {
+						// right
+						histRight[thisIndex] += 1;
+					}
+				} // B
+			} // if S
+		} // for
+
+		// Find the largest value in the histogram
+		float maxvalLeft = 0;
+		float maxvalRight = 0;
+		for (int i = 0; i < numWaves; i++) {
+			if (histLeft[i] > maxvalLeft) {
+				maxvalLeft = histLeft[i];
+			}
+			if (histRight[i] > maxvalRight) {
+				maxvalRight = histRight[i];
+			}
 		}
 
-		OscMessage msg = new OscMessage("/starhit");
-		msg.add(L);
-		msg.add(R);
-		osc.send(msg, supercollider);
+		// Normalize the histogram to values between 0 and 0.5 (normalization to
+		// 1 causes distortion) and power the hist
+		for (int i = 0; i < numWaves; i++) {
+			histLeft[i] = pow(histLeft[i] / maxvalLeft * 0.5f, power);
+			histRight[i] = pow(histRight[i] / maxvalRight * 0.5f, power);
+		}
 
+		// MOVIE ----
+		// Draw progress bar
+		stroke(0, 150, 0);
+		strokeWeight(4);
+		line(0, height - 2, video.time() / video.duration() * width, height - 2);
+		// ---- MOVIE
+
+		// Draw half of the histogram
+		stroke(255);
+		strokeWeight(1);
+		for (int i = 0; i < numWaves; i++) {
+			float x = map(i, 0, numWaves, 0, width / 2);
+			line(x, height, x, height - histLeft[i] * 200);
+			x = map(i, 0, numWaves, width / 2, width);
+			line(x, height, x, height - histRight[i] * 200);
+		}
+
+		// Send OSC msg to Supercollider
+		OscMessage myMessage = new OscMessage("/hist");
+		myMessage.add(histLeft);
+		myMessage.add(histRight);
+		osc.send(myMessage, supercollider);
 	}
 
 	public static void main(String[] args) {
