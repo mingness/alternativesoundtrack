@@ -1,5 +1,7 @@
 package analysis;
 
+import java.awt.Color;
+
 import oscP5.OscMessage;
 import processing.core.PApplet;
 import processing.core.PImage;
@@ -22,6 +24,7 @@ public class HistogramAnalysis implements IAnalysis {
 	private int numPixels;
 	private final int cap = 0;
 	private final float power = 2;
+	private final float[] hsb = { 0f, 0f, 0f };
 	private final PApplet p5;
 
 	/**
@@ -53,11 +56,13 @@ public class HistogramAnalysis implements IAnalysis {
 		// Calculate the histogram
 		for (int i = 0; i < numPixels; i++) {
 			int thisColor = img.pixels[i];
+			Color.RGBtoHSB((thisColor >> 16) & 0xff, (thisColor >> 8) & 0xff,
+					thisColor & 0xff, hsb);
 
-			S = p5.saturation(thisColor); // min threshold? otherwise grey
+			S = hsb[1] * 255; // min threshold? otherwise grey
 			if (S > greyThreshold) {
 
-				H = p5.hue(thisColor);
+				H = hsb[0] * 255;
 
 				float mappedH;
 				if (H > 212.5 || H <= 10) {
@@ -76,7 +81,7 @@ public class HistogramAnalysis implements IAnalysis {
 					mappedH = 6; // violet
 				}
 
-				B = p5.brightness(thisColor);
+				B = hsb[2] * 255;
 				// ignore black black, and white white, borders can max
 				// normalization
 				if (B >= cap && B <= 255 - cap) {
