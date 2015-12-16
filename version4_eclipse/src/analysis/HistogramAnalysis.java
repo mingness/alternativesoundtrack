@@ -45,6 +45,11 @@ public class HistogramAnalysis implements IAnalysis {
 	public void analyze(PImage img) {
 		numPixels = img.width * img.height;
 
+		for (int i = 0; i < numWaves; i++) {
+			histLeft[i] = 0;
+			histRight[i] = 0;
+		}
+
 		// Calculate the histogram
 		for (int i = 0; i < numPixels; i++) {
 			int thisColor = img.pixels[i];
