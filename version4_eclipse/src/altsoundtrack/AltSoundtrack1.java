@@ -3,10 +3,8 @@ package altsoundtrack;
 import java.util.ArrayList;
 
 import processing.core.PApplet;
-import analysis.TestAnalysis1;
 
 public class AltSoundtrack1 extends PApplet {
-	TestAnalysis1 ta;
 
 	@Override
 	public void settings() {
@@ -16,8 +14,6 @@ public class AltSoundtrack1 extends PApplet {
 
 	@Override
 	public void setup() {
-		ta = new TestAnalysis1();
-		println(ta.getX());
 	}
 
 	@Override
