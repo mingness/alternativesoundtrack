@@ -4,6 +4,9 @@ import java.util.ArrayList;
 
 import processing.core.PApplet;
 
+/*
+ * Example program to show how to set things up
+ */
 public class AltSoundtrack1 extends PApplet {
 
 	@Override

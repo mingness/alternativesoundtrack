@@ -2,11 +2,12 @@ package altsoundtrack;
 
 import java.io.File;
 
+import analysis.FrameDiffAnalysis;
+import analysis.HistogramAnalysis;
 import netP5.NetAddress;
 import oscP5.OscP5;
 import processing.core.PApplet;
 import processing.video.Movie;
-import analysis.HistogramAnalysis;
 
 public class AltSoundtrack2 extends PApplet {
 	// OSC
@@ -21,7 +22,8 @@ public class AltSoundtrack2 extends PApplet {
 	Movie video;
 
 	// Analysis
-	HistogramAnalysis histogram;
+	HistogramAnalysis a_histogram;
+	FrameDiffAnalysis a_frameDiff;
 
 	/*
 	 * (non-Javadoc)
@@ -60,7 +62,8 @@ public class AltSoundtrack2 extends PApplet {
 		video.loop();
 		video.volume(0);
 
-		histogram = new HistogramAnalysis(this);
+		a_histogram = new HistogramAnalysis(this);
+		a_frameDiff = new FrameDiffAnalysis(this);
 
 		frameRate(cfg.frameRate);
 	}
@@ -80,9 +83,12 @@ public class AltSoundtrack2 extends PApplet {
 		image(video, 0, 0, width, height);
 		drawProgressBar();
 
-		histogram.analyze(video);
-		histogram.draw();
-		osc.send(histogram.getOSCmsg(), supercollider);
+		a_histogram.analyze(video);
+		a_histogram.draw();
+		osc.send(a_histogram.getOSCmsg(), supercollider);
+
+		a_frameDiff.analyze(video);
+		a_frameDiff.draw();
 	}
 
 	public static void main(String[] args) {
