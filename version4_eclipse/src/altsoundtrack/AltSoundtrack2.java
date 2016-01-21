@@ -5,6 +5,7 @@ import java.io.File;
 import analysis.FrameDiffAnalysis;
 import analysis.HistogramAnalysis;
 import netP5.NetAddress;
+import oscP5.OscMessage;
 import oscP5.OscP5;
 import processing.core.PApplet;
 import processing.video.Movie;
@@ -84,11 +85,12 @@ public class AltSoundtrack2 extends PApplet {
 		drawProgressBar();
 
 		a_histogram.analyze(video);
-		a_histogram.draw();
-		osc.send(a_histogram.getOSCmsg(), supercollider);
+		// a_histogram.draw();
+		// sendOsc(a_histogram.getOSCmsg());
 
 		a_frameDiff.analyze(video);
 		a_frameDiff.draw();
+		sendOsc(a_frameDiff.getOSCmsg());
 	}
 
 	public static void main(String[] args) {
@@ -103,6 +105,12 @@ public class AltSoundtrack2 extends PApplet {
 		stroke(0, 150, 0);
 		strokeWeight(4);
 		line(0, height - 2, time * width, height - 2);
+	}
+
+	private void sendOsc(OscMessage msg) {
+		if (msg != null) {
+			osc.send(msg, supercollider);
+		}
 	}
 
 }
