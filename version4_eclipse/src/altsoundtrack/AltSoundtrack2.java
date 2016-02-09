@@ -4,6 +4,7 @@ import java.io.File;
 
 import analysis.FrameDiffAnalysis;
 import analysis.HistogramAnalysis;
+import analysis.OpticalFlowAnalysis;
 import netP5.NetAddress;
 import oscP5.OscMessage;
 import oscP5.OscP5;
@@ -25,6 +26,7 @@ public class AltSoundtrack2 extends PApplet {
 	// Analysis
 	HistogramAnalysis a_histogram;
 	FrameDiffAnalysis a_frameDiff;
+	OpticalFlowAnalysis a_optFlow;
 
 	/*
 	 * (non-Javadoc)
@@ -56,7 +58,7 @@ public class AltSoundtrack2 extends PApplet {
 				cfg.supercolliderPort);
 
 		File f = new File(sketchPath() + File.separator + cfg.moviePath
-				+ File.separator + cfg.movieFilenames[0]);
+				+ File.separator + cfg.movieFilenames[1]);
 
 		// Movie
 		video = new Movie(this, f.getAbsolutePath());
@@ -65,6 +67,7 @@ public class AltSoundtrack2 extends PApplet {
 
 		a_histogram = new HistogramAnalysis(this);
 		a_frameDiff = new FrameDiffAnalysis(this);
+		a_optFlow = new OpticalFlowAnalysis(this);
 
 		frameRate(cfg.frameRate);
 	}
@@ -89,8 +92,17 @@ public class AltSoundtrack2 extends PApplet {
 		// sendOsc(a_histogram.getOSCmsg());
 
 		a_frameDiff.analyze(video);
-		a_frameDiff.draw();
-		sendOsc(a_frameDiff.getOSCmsg());
+		// a_frameDiff.draw();
+		// sendOsc(a_frameDiff.getOSCmsg());
+
+		if (a_optFlow.initialized) {
+			a_optFlow.analyze(video);
+			a_optFlow.draw();
+			sendOsc(a_optFlow.getOSCmsg());
+		} else {
+			a_optFlow.setSize(video.width, video.height, 30);
+			a_optFlow.setFPS((int) video.frameRate);
+		}
 	}
 
 	public static void main(String[] args) {
