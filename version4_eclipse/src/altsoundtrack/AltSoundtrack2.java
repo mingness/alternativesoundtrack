@@ -48,6 +48,7 @@ public class AltSoundtrack2 extends PApplet {
 			cfg = cfgManager.load();
 		} else {
 			cfg = new Config();
+			cfgManager.save(cfg);
 		}
 
 		// OSC
