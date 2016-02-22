@@ -22,8 +22,17 @@ SynthDef('opticalFlowSynth', {
 	arg pan, pitch;
 	var sig;
 	sig = SinOsc.ar([pitch * 20 + 440, pitch * 20 + 442]);
-	Out.ar(0, Pan2.ar(sig, pan));
+	Out.ar(0, Balance2.ar(sig[0], sig[1], pan.clip(-1, 1)));
 }).add;
+
+// Test sequencer sound. To be improved.
+SynthDef('seqSynth', {
+	arg pitch = 400, amp = 0.5;
+    var sig;
+    sig = amp * SinOsc.ar(pitch) * EnvGen.kr(Env.linen(0.01, 0.1, 0.5), doneAction: 2);
+    Out.ar(0, sig ! 2);
+}).add;
+
 )
 
 (
@@ -48,9 +57,13 @@ OSCdef('scenecutListener', {
 }, "/scenecut");
 OSCdef('ofListener', {
     arg msg;
-	~opticalflow.setn(\pan, msg[1].clip(-1, 1));
+	~opticalflow.setn(\pan, msg[1]);
     ~opticalflow.setn(\pitch, msg[2]);
 }, "/of");
+OSCdef('seqListener', {
+	arg msg;
+	Synth('seqSynth', [\amp, msg[3], \pitch, msg[1] * 400 + 400]);
+}, "seq");
 )
 
 (

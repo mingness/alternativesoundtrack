@@ -5,6 +5,7 @@ import java.io.File;
 import analysis.FrameDiffAnalysis;
 import analysis.HistogramAnalysis;
 import analysis.OpticalFlowAnalysis;
+import analysis.SequencerAnalysis;
 import netP5.NetAddress;
 import oscP5.OscMessage;
 import oscP5.OscP5;
@@ -27,6 +28,7 @@ public class AltSoundtrack2 extends PApplet {
 	HistogramAnalysis a_histogram;
 	FrameDiffAnalysis a_frameDiff;
 	OpticalFlowAnalysis a_optFlow;
+	SequencerAnalysis a_sequencer;
 
 	/*
 	 * (non-Javadoc)
@@ -69,6 +71,7 @@ public class AltSoundtrack2 extends PApplet {
 		a_histogram = new HistogramAnalysis(this);
 		a_frameDiff = new FrameDiffAnalysis(this);
 		a_optFlow = new OpticalFlowAnalysis(this);
+		a_sequencer = new SequencerAnalysis(this);
 
 		frameRate(cfg.frameRate);
 	}
@@ -88,21 +91,31 @@ public class AltSoundtrack2 extends PApplet {
 		image(video, 0, 0, width, height);
 		drawProgressBar();
 
-		a_histogram.analyze(video);
+		// a_histogram.analyze(video);
 		// a_histogram.draw();
 		// sendOsc(a_histogram.getOSCmsg());
 
-		a_frameDiff.analyze(video);
+		// a_frameDiff.analyze(video);
 		// a_frameDiff.draw();
 		// sendOsc(a_frameDiff.getOSCmsg());
 
-		if (a_optFlow.initialized) {
-			a_optFlow.analyze(video);
-			a_optFlow.draw();
-			sendOsc(a_optFlow.getOSCmsg());
+		/*
+		 * if (a_optFlow.initialized) {
+		 * a_optFlow.analyze(video);
+		 * a_optFlow.draw();
+		 * sendOsc(a_optFlow.getOSCmsg());
+		 * } else {
+		 * a_optFlow.setSize(video.width, video.height, 30);
+		 * a_optFlow.setFPS((int) video.frameRate);
+		 * }
+		 */
+
+		if (a_sequencer.initialized) {
+			a_sequencer.analyze(video);
+			a_sequencer.draw();
+			sendOsc(a_sequencer.getOSCmsg());
 		} else {
-			a_optFlow.setSize(video.width, video.height, 30);
-			a_optFlow.setFPS((int) video.frameRate);
+			a_sequencer.setSize(video.width, video.height);
 		}
 	}
 
