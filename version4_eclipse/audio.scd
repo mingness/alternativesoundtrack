@@ -29,7 +29,7 @@ SynthDef('opticalFlowSynth', {
 SynthDef('seqSynth', {
 	arg pitch = 400, amp = 0.5;
     var sig;
-    sig = amp * SinOsc.ar(pitch) * EnvGen.kr(Env.linen(0.01, 0.1, 0.5), doneAction: 2);
+    sig = SinOsc.ar(pitch, mul: amp) * EnvGen.kr(Env.linen(0.01, 0.1, 0.5), doneAction: 2);
     Out.ar(0, sig ! 2);
 }).add;
 

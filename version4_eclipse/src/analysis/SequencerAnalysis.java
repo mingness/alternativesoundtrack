@@ -16,7 +16,9 @@ public class SequencerAnalysis implements IAnalysis {
 	private final int numPixelTestsV = 4;
 	private final int numPixelTests = numPixelTestsH * numPixelTestsV;
 	private int result;
-	private int step, x, y;
+	private int step;
+	private int nextCheckMs = 0;
+	private float x, y;
 	private int imgWidth = 0;
 	private int imgHeight = 0;
 	public boolean initialized = false;
@@ -38,6 +40,7 @@ public class SequencerAnalysis implements IAnalysis {
 
 	private void incStep() {
 		step = (step + 1) % numPixelTests;
+		nextCheckMs += 125;
 	}
 
 	/**
@@ -50,12 +53,16 @@ public class SequencerAnalysis implements IAnalysis {
 	 */
 	@Override
 	public void analyze(PImage img) {
-		x = imgWidth / 4
-				+ imgWidth / (numPixelTestsH + 2) * (step % numPixelTestsH);
-		y = imgHeight / 4 + imgHeight / (numPixelTestsV - 1)
-				* (step / numPixelTestsV) / 2;
-		int px = x + y * imgWidth;
+		// calculate normalized coordinates
+		x = 0.25f + 1f / (numPixelTestsH + 2) * (step % numPixelTestsH);
+		y = 0.25f + 1f / (numPixelTestsV - 1) * (step / numPixelTestsV) / 2;
+		// calculate which pixel to sample from the image
+		int px = (int) (imgWidth * x + y * imgHeight * imgWidth);
+		// get the color
 		result = img.pixels[px];
+		// scale x and y to match the window to visualize the sampling location
+		x *= p5.width;
+		y *= p5.height;
 	}
 
 	/**
@@ -85,7 +92,7 @@ public class SequencerAnalysis implements IAnalysis {
 		// actual BPM we want, and observe the current
 		// milliseconds timestamp, or use some kind of
 		// precise clock better suited for music.
-		if (p5.frameCount % 4 == 0) {
+		if (p5.millis() > nextCheckMs) {
 			incStep();
 			OscMessage msg = new OscMessage("/seq");
 			msg.add(p5.hue(result) / 255f);
