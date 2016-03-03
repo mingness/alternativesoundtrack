@@ -7,7 +7,7 @@ import processing.core.PApplet;
 /*
  * Example program to show how to set things up
  */
-public class AltSoundtrack1 extends PApplet {
+public class Demo extends PApplet {
 
 	@Override
 	public void settings() {
@@ -30,7 +30,7 @@ public class AltSoundtrack1 extends PApplet {
 		// options.add("--display=0");
 		// options.add("--full-screen");
 		options.add("--hide-stop");
-		options.add("altsoundtrack.AltSoundtrack1"); // com.x.Class
+		options.add("altsoundtrack.Demo"); // com.x.Class
 		String[] optionsArray = new String[options.size()];
 		optionsArray = options.toArray(optionsArray);
 

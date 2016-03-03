@@ -12,7 +12,7 @@ import oscP5.OscP5;
 import processing.core.PApplet;
 import processing.video.Movie;
 
-public class AltSoundtrack2 extends PApplet {
+public class Main extends PApplet {
 	// OSC
 	private OscP5 osc;
 	private NetAddress supercollider;
@@ -121,7 +121,7 @@ public class AltSoundtrack2 extends PApplet {
 
 	public static void main(String[] args) {
 		String[] options = { "--bgcolor=#000000", "--hide-stop",
-				"altsoundtrack.AltSoundtrack2" };
+				"altsoundtrack.Main" };
 
 		PApplet.main(options);
 	}
