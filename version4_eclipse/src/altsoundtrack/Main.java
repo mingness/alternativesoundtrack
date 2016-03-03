@@ -1,9 +1,11 @@
 package altsoundtrack;
 
 import java.io.File;
+import java.util.ArrayList;
 
 import analysis.FrameDiffAnalysis;
 import analysis.HistogramAnalysis;
+import analysis.IAnalysis;
 import analysis.OpticalFlowAnalysis;
 import analysis.SequencerAnalysis;
 import netP5.NetAddress;
@@ -12,6 +14,12 @@ import oscP5.OscP5;
 import processing.core.PApplet;
 import processing.video.Movie;
 
+/**
+ * Main project file
+ *
+ * @author hamoid
+ *
+ */
 public class Main extends PApplet {
 	// OSC
 	private OscP5 osc;
@@ -24,11 +32,8 @@ public class Main extends PApplet {
 	// Video
 	Movie video;
 
-	// Analysis
-	HistogramAnalysis a_histogram;
-	FrameDiffAnalysis a_frameDiff;
-	OpticalFlowAnalysis a_optFlow;
-	SequencerAnalysis a_sequencer;
+	// Analyses
+	ArrayList<IAnalysis> analyses = new ArrayList<IAnalysis>();
 
 	/*
 	 * (non-Javadoc)
@@ -68,10 +73,10 @@ public class Main extends PApplet {
 		video.loop();
 		video.volume(0);
 
-		a_histogram = new HistogramAnalysis(this);
-		a_frameDiff = new FrameDiffAnalysis(this);
-		a_optFlow = new OpticalFlowAnalysis(this);
-		a_sequencer = new SequencerAnalysis(this);
+		analyses.add(new HistogramAnalysis(this));
+		analyses.add(new FrameDiffAnalysis(this));
+		analyses.add(new OpticalFlowAnalysis(this));
+		analyses.add(new SequencerAnalysis(this));
 
 		frameRate(cfg.frameRate);
 	}
@@ -91,31 +96,16 @@ public class Main extends PApplet {
 		image(video, 0, 0, width, height);
 		drawProgressBar();
 
-		// a_histogram.analyze(video);
-		// a_histogram.draw();
-		// sendOsc(a_histogram.getOSCmsg());
-
-		// a_frameDiff.analyze(video);
-		// a_frameDiff.draw();
-		// sendOsc(a_frameDiff.getOSCmsg());
-
-		/*
-		 * if (a_optFlow.initialized) {
-		 * a_optFlow.analyze(video);
-		 * a_optFlow.draw();
-		 * sendOsc(a_optFlow.getOSCmsg());
-		 * } else {
-		 * a_optFlow.setSize(video.width, video.height, 30);
-		 * a_optFlow.setFPS((int) video.frameRate);
-		 * }
-		 */
-
-		if (a_sequencer.initialized) {
-			a_sequencer.analyze(video);
-			a_sequencer.draw();
-			sendOsc(a_sequencer.getOSCmsg());
-		} else {
-			a_sequencer.setSize(video.width, video.height);
+		// Run all analyses
+		for (IAnalysis a : analyses) {
+			if (a.isInitialized()) {
+				a.analyze(video);
+				a.draw();
+				sendOsc(a.getOSCmsg());
+			} else {
+				a.initialize(video.width, video.height,
+						Math.round(video.frameRate));
+			}
 		}
 	}
 

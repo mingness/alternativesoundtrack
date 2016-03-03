@@ -4,8 +4,11 @@ import java.util.ArrayList;
 
 import processing.core.PApplet;
 
-/*
+/**
  * Example program to show how to set things up
+ * 
+ * @author hamoid
+ *
  */
 public class Demo extends PApplet {
 

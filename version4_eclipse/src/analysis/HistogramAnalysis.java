@@ -26,6 +26,7 @@ public class HistogramAnalysis implements IAnalysis {
 	private final float power = 2;
 	private final float[] hsb = { 0f, 0f, 0f };
 	private final PApplet p5;
+	private boolean initialized = false;
 
 	/**
 	 * @param p5
@@ -88,8 +89,8 @@ public class HistogramAnalysis implements IAnalysis {
 					float mappedB = PApplet.map(B, cap, 255 - cap, 0,
 							numOctaves - 1);
 
-					int thisIndex = PApplet.round(numBaseFreqs * mappedB
-							+ mappedH);
+					int thisIndex = PApplet
+							.round(numBaseFreqs * mappedB + mappedH);
 					if ((i % img.width) < (img.width / 2)) {
 						histLeft[thisIndex] += 1;
 					} else {
@@ -115,8 +116,8 @@ public class HistogramAnalysis implements IAnalysis {
 		// 1 causes distortion) and power the hist
 		for (int i = 0; i < numWaves; i++) {
 			histLeft[i] = PApplet.pow(histLeft[i] / maxValLeft * 0.5f, power);
-			histRight[i] = PApplet
-					.pow(histRight[i] / maxValRight * 0.5f, power);
+			histRight[i] = PApplet.pow(histRight[i] / maxValRight * 0.5f,
+					power);
 		}
 	}
 
@@ -125,10 +126,6 @@ public class HistogramAnalysis implements IAnalysis {
 	 */
 	@Override
 	public void draw() {
-		if (p5.frameCount % 50 == 0) {
-			PApplet.printArray(histLeft);
-			PApplet.printArray(histRight);
-		}
 		p5.stroke(255);
 		p5.strokeWeight(1);
 		for (int i = 0; i < numWaves; i++) {
@@ -153,6 +150,16 @@ public class HistogramAnalysis implements IAnalysis {
 		msg.add(histLeft);
 		msg.add(histRight);
 		return msg;
+	}
+
+	@Override
+	public boolean isInitialized() {
+		return initialized;
+	}
+
+	@Override
+	public void initialize(int w, int h, int fps) {
+		initialized = true;
 	}
 
 }

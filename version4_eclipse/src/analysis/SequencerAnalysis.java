@@ -21,7 +21,7 @@ public class SequencerAnalysis implements IAnalysis {
 	private float x, y;
 	private int imgWidth = 0;
 	private int imgHeight = 0;
-	public boolean initialized = false;
+	private boolean initialized = false;
 
 	/**
 	 * @param p5
@@ -32,7 +32,8 @@ public class SequencerAnalysis implements IAnalysis {
 		this.p5 = p5;
 	}
 
-	public void setSize(int w, int h) {
+	@Override
+	public void initialize(int w, int h, int fps) {
 		imgWidth = w;
 		imgHeight = h;
 		initialized = true;
@@ -101,6 +102,11 @@ public class SequencerAnalysis implements IAnalysis {
 			return msg;
 		}
 		return null;
+	}
+
+	@Override
+	public boolean isInitialized() {
+		return initialized;
 	}
 
 }

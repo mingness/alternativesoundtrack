@@ -12,43 +12,43 @@ import processing.core.PImage;
  */
 public class OpticalFlowAnalysis implements IAnalysis {
 	private final PApplet p5;
+	// This setting greatly affects the result
+	// More is less cpu intensive
+	private final int GRID_SIZE_PX = 30;
 
-	int gridStepPx; // grid step (pixels). More is less cpu intensive
-	float predictionTimeSec;
+	private float predictionTimeSec;
 
-	int[] vline;
+	private boolean initialized = false;
 
-	public boolean initialized = false;
-
-	int[] imgPixels;
-	int imgWidth = 0;
-	int imgHeight = 0;
-	int fps;
+	private int[] imgPixels;
+	private int imgWidth = 0;
+	private int imgHeight = 0;
 
 	// grid parameters
-	int avgWindowSize; // -avgWindowSize .. +avgWindowSize
-	int columnCount, rowCount;
-	int gridStepPx2;
-	float predictionFrames;
+	private int avgWindowSize; // -avgWindowSize .. +avgWindowSize
+	private int columnCount, rowCount;
+	private int gridStepPx2;
+	private float predictionFrames;
 
 	// regression vectors
-	float[] fx, fy, ft;
-	int vectorCount;
+	private float[] fx, fy, ft;
+	private int vectorCount;
 
 	// regularization term for regression
-	float fc = (float) Math.pow(10, 8); // larger values for noisy video
+	private final float fc = (float) Math.pow(10, 8); // larger values for noisy
+														// video
 
 	// smoothing parameters
-	float smoothness = 0.2f; // smaller value for longer smoothing
+	private final float smoothness = 0.2f; // smaller value for longer smoothing
 
 	// internally used variables
-	float ar, ag, ab; // used as return value of pixave
-	float[] dtr, dtg, dtb; // differentiation by t (red,gree,blue)
-	float[] dxr, dxg, dxb; // differentiation by x (red,gree,blue)
-	float[] dyr, dyg, dyb; // differentiation by y (red,gree,blue)
-	float[] par, pag, pab; // averaged grid values (red,gree,blue)
-	float[] flowx, flowy; // computed optical flow
-	float[] sflowx, sflowy; // slowly changing version of the flow
+	private float ar, ag, ab; // used as return value of pixave
+	private float[] dtr, dtg, dtb; // differentiation by t (red,gree,blue)
+	private float[] dxr, dxg, dxb; // differentiation by x (red,gree,blue)
+	private float[] dyr, dyg, dyb; // differentiation by y (red,gree,blue)
+	private float[] par, pag, pab; // averaged grid values (red,gree,blue)
+	private float[] flowx, flowy; // computed optical flow
+	private float[] sflowx, sflowy; // slowly changing version of the flow
 
 	/**
 	 * @param p5
@@ -59,16 +59,17 @@ public class OpticalFlowAnalysis implements IAnalysis {
 		this.p5 = p5;
 	}
 
-	public void setSize(int w, int h, int gridStepPx) {
+	@Override
+	public void initialize(int w, int h, int fps) {
+		setFPS(fps);
 		imgWidth = w;
 		imgHeight = h;
 
-		this.gridStepPx = gridStepPx;
-		avgWindowSize = gridStepPx * 2;
-		gridStepPx2 = gridStepPx / 2;
+		avgWindowSize = GRID_SIZE_PX * 2;
+		gridStepPx2 = GRID_SIZE_PX / 2;
 
-		columnCount = imgWidth / gridStepPx;
-		rowCount = imgHeight / gridStepPx;
+		columnCount = imgWidth / GRID_SIZE_PX;
+		rowCount = imgHeight / GRID_SIZE_PX;
 
 		int cells = columnCount * rowCount;
 		par = new float[cells];
@@ -99,13 +100,10 @@ public class OpticalFlowAnalysis implements IAnalysis {
 
 		ft = new float[vectorCount];
 
-		vline = new int[imgWidth];
-
 		initialized = true;
 	}
 
 	public void setFPS(int fps) {
-		this.fps = fps;
 		predictionTimeSec = 1.0f; // larger for longer vector
 		predictionFrames = predictionTimeSec * fps;
 	}
@@ -124,9 +122,9 @@ public class OpticalFlowAnalysis implements IAnalysis {
 
 		// 1st sweep : differentiation by time
 		for (int ix = 0; ix < columnCount; ix++) {
-			int x0 = ix * gridStepPx + gridStepPx2;
+			int x0 = ix * GRID_SIZE_PX + gridStepPx2;
 			for (int iy = 0; iy < rowCount; iy++) {
-				int y0 = iy * gridStepPx + gridStepPx2;
+				int y0 = iy * GRID_SIZE_PX + gridStepPx2;
 				int ig = iy * columnCount + ix;
 				// compute average pixel at (x0,y0)
 				pixave(x0 - avgWindowSize, y0 - avgWindowSize,
@@ -159,9 +157,7 @@ public class OpticalFlowAnalysis implements IAnalysis {
 
 		// 3rd sweep : solving optical flow
 		for (int ix = 1; ix < columnCount - 1; ix++) {
-			int x0 = ix * gridStepPx + gridStepPx2;
 			for (int iy = 1; iy < rowCount - 1; iy++) {
-				int y0 = iy * gridStepPx + gridStepPx2;
 				int ig = iy * columnCount + ix;
 
 				// prepare vectors fx, fy, ft
@@ -244,7 +240,7 @@ public class OpticalFlowAnalysis implements IAnalysis {
 	// solve optical flow by least squares (regression analysis)
 	private void solveflow(int ig) {
 		float xx, xy, yy, xt, yt;
-		float a, u, v, w;
+		float a, u, v;
 
 		// prepare covariances
 		xx = xy = yy = xt = yt = 0.0f;
@@ -262,8 +258,10 @@ public class OpticalFlowAnalysis implements IAnalysis {
 		v = xx * yt - xy * xt; // y direction
 
 		// write back
-		flowx[ig] = -2 * gridStepPx * u / a; // optical flow x (pixel per frame)
-		flowy[ig] = -2 * gridStepPx * v / a; // optical flow y (pixel per frame)
+		flowx[ig] = -2 * GRID_SIZE_PX * u / a; // optical flow x (pixel per
+												// frame)
+		flowy[ig] = -2 * GRID_SIZE_PX * v / a; // optical flow y (pixel per
+												// frame)
 	}
 
 	/**
@@ -271,9 +269,6 @@ public class OpticalFlowAnalysis implements IAnalysis {
 	 */
 	@Override
 	public void draw() {
-		// image(video, 0, 0, width, height);
-		// p5.background(0);
-
 		float kx = p5.width / (float) imgWidth;
 		float ky = p5.height / (float) imgHeight;
 
@@ -283,9 +278,9 @@ public class OpticalFlowAnalysis implements IAnalysis {
 
 			float len = u * u + v * v; // don't use sqrt for better performance
 			if (len >= 5 * 5) {
-				p5.stroke(255);
-				float x = kx * ((i % columnCount) * gridStepPx + gridStepPx2);
-				float y = ky * ((i / columnCount) * gridStepPx + gridStepPx2);
+				p5.stroke(0, 255, 0);
+				float x = kx * ((i % columnCount) * GRID_SIZE_PX + gridStepPx2);
+				float y = ky * ((i / columnCount) * GRID_SIZE_PX + gridStepPx2);
 				p5.line(x, y, x + u, y + v);
 			}
 		}
@@ -302,11 +297,16 @@ public class OpticalFlowAnalysis implements IAnalysis {
 		// Send OSC msg to Supercollider
 		OscMessage msg = new OscMessage("/of");
 		int middleIndex = columnCount * rowCount / 2;
-		msg.add(predictionFrames * sflowx[middleIndex] / gridStepPx);
-		msg.add(predictionFrames * sflowy[middleIndex] / gridStepPx);
+		msg.add(predictionFrames * sflowx[middleIndex] / GRID_SIZE_PX);
+		msg.add(predictionFrames * sflowy[middleIndex] / GRID_SIZE_PX);
 		// PApplet.println(predictionFrames * sflowx[middleIndex] / gridStepPx,
 		// predictionFrames * sflowy[middleIndex] / gridStepPx);
 		return msg;
+	}
+
+	@Override
+	public boolean isInitialized() {
+		return initialized;
 	}
 
 }

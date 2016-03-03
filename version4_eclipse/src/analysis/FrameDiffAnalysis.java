@@ -23,6 +23,7 @@ public class FrameDiffAnalysis implements IAnalysis {
 	private final int[] pixelB = new int[numPixelTests];
 	private final PGraphics diffGraph;
 	private final int sceneCutThreshold = 35;
+	private boolean initialized = false;
 	// Maybe to implement:
 	// private final int sceneCutMinFrameDist = 5;
 
@@ -33,7 +34,7 @@ public class FrameDiffAnalysis implements IAnalysis {
 	 */
 	public FrameDiffAnalysis(PApplet p5) {
 		this.p5 = p5;
-		diffGraph = p5.createGraphics(p5.width, 128);
+		diffGraph = p5.createGraphics(p5.width, 64);
 	}
 
 	/**
@@ -79,14 +80,16 @@ public class FrameDiffAnalysis implements IAnalysis {
 	public void draw() {
 		int x = p5.frameCount % p5.width;
 		diffGraph.beginDraw();
-		if (x == 0) {
+		if (x < 2) {
 			diffGraph.clear();
 		}
-		diffGraph.stroke(255);
-		diffGraph.line(x, diffGraph.height, x,
-				diffGraph.height - movementSum / 2);
+		int y = diffGraph.height - movementSum / 2;
+		diffGraph.stroke(0);
+		diffGraph.line(x, diffGraph.height, x, 0);
+		diffGraph.stroke(255, 0, 0);
+		diffGraph.line(x, diffGraph.height, x, y);
 		diffGraph.endDraw();
-		p5.image(diffGraph, 0, p5.height - diffGraph.height);
+		p5.image(diffGraph, 0, p5.height * 0.85f);
 	}
 
 	/**
@@ -100,6 +103,16 @@ public class FrameDiffAnalysis implements IAnalysis {
 		// Send OSC msg to Supercollider
 		return movementSum > sceneCutThreshold ? new OscMessage("/scenecut")
 				: null;
+	}
+
+	@Override
+	public boolean isInitialized() {
+		return initialized;
+	}
+
+	@Override
+	public void initialize(int w, int h, int fps) {
+		initialized = true;
 	}
 
 }
