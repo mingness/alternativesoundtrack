@@ -1,4 +1,4 @@
-package altsoundtrack;
+package altsoundtrack.check;
 
 import processing.core.PApplet;
 import processing.video.Capture;

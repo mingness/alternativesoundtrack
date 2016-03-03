@@ -1,7 +1,9 @@
-package altsoundtrack;
+package altsoundtrack.check;
 
 import java.io.File;
 
+import altsoundtrack.Config;
+import altsoundtrack.ConfigManager;
 import processing.core.PApplet;
 import processing.video.Movie;
 
