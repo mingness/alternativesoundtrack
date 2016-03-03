@@ -7,7 +7,7 @@ import altsoundtrack.ConfigManager;
 import processing.core.PApplet;
 import processing.video.Movie;
 
-public class Check2_VideoPlayback extends PApplet {
+public class VideoPlayback extends PApplet {
 
 	// Config
 	private Config cfg;
@@ -39,10 +39,9 @@ public class Check2_VideoPlayback extends PApplet {
 		// Movie
 		video = new Movie(this, f.getAbsolutePath());
 		video.loop();
-		
+
 		frameRate(cfg.frameRate);
 	}
-
 
 	@Override
 	public void draw() {
@@ -55,7 +54,7 @@ public class Check2_VideoPlayback extends PApplet {
 
 	public static void main(String[] args) {
 		String[] options = { "--bgcolor=#000000", "--hide-stop",
-		"altsoundtrack.Check2_VideoPlayback" };
+				"altsoundtrack.check.VideoPlayback" };
 
 		PApplet.main(options);
 	}
