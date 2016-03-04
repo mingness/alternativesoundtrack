@@ -24,6 +24,7 @@ public class FrameDiffAnalysis implements IAnalysis {
 	private final PGraphics diffGraph;
 	private final int sceneCutThreshold = 35;
 	private boolean initialized = false;
+	public boolean enabled = false;
 	// Maybe to implement:
 	// private final int sceneCutMinFrameDist = 5;
 
@@ -115,4 +116,8 @@ public class FrameDiffAnalysis implements IAnalysis {
 		initialized = true;
 	}
 
+	@Override
+	public boolean isEnabled() {
+		return enabled;
+	}
 }

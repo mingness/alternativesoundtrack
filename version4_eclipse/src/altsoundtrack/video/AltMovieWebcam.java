@@ -5,6 +5,12 @@ import processing.core.PApplet;
 import processing.core.PImage;
 import processing.video.Capture;
 
+/**
+ * Webcam player. See AltMovie for more details.
+ *
+ * @author hamoid
+ *
+ */
 public class AltMovieWebcam extends AltMovie {
 	private final Capture v;
 

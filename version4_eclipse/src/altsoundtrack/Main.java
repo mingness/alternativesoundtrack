@@ -37,20 +37,16 @@ public class Main extends PApplet {
 	// Analyses
 	ArrayList<IAnalysis> analyses = new ArrayList<IAnalysis>();
 
-	/*
-	 * (non-Javadoc)
-	 * @see processing.core.PApplet#settings()
-	 */
+	// Control panel
+	ControlFrame cf;
+
+	// In Processing 3 you specify size() inside settings()
 	@Override
 	public void settings() {
 		size(600, 600);
 		// fullScreen();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see processing.core.PApplet#setup()
-	 */
 	@Override
 	public void setup() {
 		// Config
@@ -79,6 +75,9 @@ public class Main extends PApplet {
 		analyses.add(new SequencerAnalysis(this));
 
 		frameRate(cfg.frameRate);
+
+		cf = new ControlFrame();
+		cf.initialize(analyses);
 	}
 
 	/*
@@ -95,14 +94,16 @@ public class Main extends PApplet {
 		drawProgressBar();
 
 		// Run all analyses
-		for (IAnalysis a : analyses) {
-			if (a.isInitialized()) {
-				a.analyze(video.getImg());
-				a.draw();
-				sendOsc(a.getOSCmsg());
+		for (IAnalysis analysis : analyses) {
+			if (analysis.isInitialized()) {
+				if (analysis.isEnabled()) {
+					analysis.analyze(video.getImg());
+					analysis.draw();
+					sendOsc(analysis.getOSCmsg());
+				}
 			} else {
 				PImage v = video.getImg();
-				a.initialize(v.width, v.height, video.getFrameRate());
+				analysis.initialize(v.width, v.height, video.getFrameRate());
 			}
 		}
 	}

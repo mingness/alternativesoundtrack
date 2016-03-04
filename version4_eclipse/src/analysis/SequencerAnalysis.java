@@ -22,6 +22,7 @@ public class SequencerAnalysis implements IAnalysis {
 	private int imgWidth = 0;
 	private int imgHeight = 0;
 	private boolean initialized = false;
+	public boolean enabled = false;
 
 	/**
 	 * @param p5
@@ -109,4 +110,8 @@ public class SequencerAnalysis implements IAnalysis {
 		return initialized;
 	}
 
+	@Override
+	public boolean isEnabled() {
+		return enabled;
+	}
 }

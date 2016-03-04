@@ -19,6 +19,7 @@ public class OpticalFlowAnalysis implements IAnalysis {
 	private float predictionTimeSec;
 
 	private boolean initialized = false;
+	public boolean enabled = false;
 
 	private int[] imgPixels;
 	private int imgWidth = 0;
@@ -309,4 +310,8 @@ public class OpticalFlowAnalysis implements IAnalysis {
 		return initialized;
 	}
 
+	@Override
+	public boolean isEnabled() {
+		return enabled;
+	}
 }

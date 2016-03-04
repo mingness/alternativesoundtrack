@@ -27,6 +27,7 @@ public class HistogramAnalysis implements IAnalysis {
 	private final float[] hsb = { 0f, 0f, 0f };
 	private final PApplet p5;
 	private boolean initialized = false;
+	public boolean enabled = false;
 
 	/**
 	 * @param p5
@@ -162,4 +163,8 @@ public class HistogramAnalysis implements IAnalysis {
 		initialized = true;
 	}
 
+	@Override
+	public boolean isEnabled() {
+		return enabled;
+	}
 }

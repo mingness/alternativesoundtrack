@@ -7,6 +7,12 @@ import processing.core.PApplet;
 import processing.core.PImage;
 import processing.video.Movie;
 
+/**
+ * File movie player. See AltMovie for more details.
+ *
+ * @author hamoid
+ *
+ */
 public class AltMovieFile extends AltMovie {
 	private final Movie v;
 

@@ -35,5 +35,6 @@
 			<attribute name="maven.pomderived" value="true"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry kind="lib" path="/home/funpro/Desktop/work/2015_altsoundtrack/alternativesoundtrack/version4_eclipse/lib/controlP5.jar"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>

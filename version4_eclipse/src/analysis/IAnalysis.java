@@ -4,7 +4,7 @@ import oscP5.OscMessage;
 import processing.core.PImage;
 
 /**
- * Interface that all Analysis classe must implement
+ * Interface that all Analysis classes must implement
  *
  * @author hamoid
  *
@@ -15,6 +15,8 @@ public interface IAnalysis {
 	public void draw();
 
 	public boolean isInitialized();
+
+	public boolean isEnabled();
 
 	public void initialize(int w, int h, int fps);
 
