@@ -1,8 +1,10 @@
 package altsoundtrack;
 
-import java.io.File;
 import java.util.ArrayList;
 
+import altsoundtrack.video.AltMovie;
+import altsoundtrack.video.AltMovieFile;
+import altsoundtrack.video.AltMovieWebcam;
 import analysis.FrameDiffAnalysis;
 import analysis.HistogramAnalysis;
 import analysis.IAnalysis;
@@ -12,7 +14,7 @@ import netP5.NetAddress;
 import oscP5.OscMessage;
 import oscP5.OscP5;
 import processing.core.PApplet;
-import processing.video.Movie;
+import processing.core.PImage;
 
 /**
  * Main project file
@@ -30,7 +32,7 @@ public class Main extends PApplet {
 	private ConfigManager cfgManager;
 
 	// Video
-	Movie video;
+	AltMovie video;
 
 	// Analyses
 	ArrayList<IAnalysis> analyses = new ArrayList<IAnalysis>();
@@ -65,13 +67,11 @@ public class Main extends PApplet {
 		supercollider = new NetAddress(cfg.supercolliderIp,
 				cfg.supercolliderPort);
 
-		File f = new File(sketchPath() + File.separator + cfg.moviePath
-				+ File.separator + cfg.movieFilenames[1]);
-
-		// Movie
-		video = new Movie(this, f.getAbsolutePath());
-		video.loop();
-		video.volume(0);
+		if (cfg.useWebcam) {
+			video = new AltMovieWebcam(this, cfg);
+		} else {
+			video = new AltMovieFile(this, cfg, 1);
+		}
 
 		analyses.add(new HistogramAnalysis(this));
 		analyses.add(new FrameDiffAnalysis(this));
@@ -90,21 +90,19 @@ public class Main extends PApplet {
 		if (!video.available()) {
 			return;
 		}
-		video.read();
-		video.loadPixels();
 
-		image(video, 0, 0, width, height);
+		video.display();
 		drawProgressBar();
 
 		// Run all analyses
 		for (IAnalysis a : analyses) {
 			if (a.isInitialized()) {
-				a.analyze(video);
+				a.analyze(video.getImg());
 				a.draw();
 				sendOsc(a.getOSCmsg());
 			} else {
-				a.initialize(video.width, video.height,
-						Math.round(video.frameRate));
+				PImage v = video.getImg();
+				a.initialize(v.width, v.height, video.getFrameRate());
 			}
 		}
 	}
@@ -117,10 +115,9 @@ public class Main extends PApplet {
 	}
 
 	private void drawProgressBar() {
-		float time = video.time() / video.duration();
 		stroke(0, 150, 0);
 		strokeWeight(4);
-		line(0, height - 2, time * width, height - 2);
+		line(0, height - 2, video.currPos() * width, height - 2);
 	}
 
 	private void sendOsc(OscMessage msg) {

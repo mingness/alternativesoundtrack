@@ -14,4 +14,6 @@ public class Config {
 	public int supercolliderPort = 57120;
 
 	public int frameRate = 30;
+	public boolean useWebcam = false;
+	public int webcamId = 0;
 }
