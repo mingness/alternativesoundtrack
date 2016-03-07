@@ -164,6 +164,11 @@ public class HistogramAnalysis implements IAnalysis {
 	}
 
 	@Override
+	public void restart() {
+		initialized = false;
+	}
+
+	@Override
 	public boolean isEnabled() {
 		return enabled;
 	}

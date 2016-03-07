@@ -33,12 +33,16 @@ public class VideoPlayback extends PApplet {
 			cfgManager.save(cfg);
 		}
 
-		File f = new File(sketchPath() + File.separator + cfg.moviePath
-				+ File.separator + cfg.movieFilenames[0]);
+		File path = new File(cfg.moviePath);
+		if (path.isDirectory()) {
+			File[] movies = path.listFiles();
 
-		// Movie
-		video = new Movie(this, f.getAbsolutePath());
-		video.loop();
+			// Movie
+			video = new Movie(this, movies[0].getAbsolutePath());
+			video.loop();
+		} else {
+			println("No movies found at", cfg.moviePath);
+		}
 
 		frameRate(cfg.frameRate);
 	}

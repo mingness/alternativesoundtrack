@@ -104,6 +104,11 @@ public class OpticalFlowAnalysis implements IAnalysis {
 		initialized = true;
 	}
 
+	@Override
+	public void restart() {
+		initialized = false;
+	}
+
 	public void setFPS(int fps) {
 		predictionTimeSec = 1.0f; // larger for longer vector
 		predictionFrames = predictionTimeSec * fps;

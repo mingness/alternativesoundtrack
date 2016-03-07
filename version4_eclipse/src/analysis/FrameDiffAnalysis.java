@@ -117,6 +117,11 @@ public class FrameDiffAnalysis implements IAnalysis {
 	}
 
 	@Override
+	public void restart() {
+		initialized = false;
+	}
+
+	@Override
 	public boolean isEnabled() {
 		return enabled;
 	}

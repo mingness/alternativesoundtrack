@@ -57,7 +57,6 @@ public class ConfigManager {
 			FileInputStream fileIn = new FileInputStream(path);
 			JsonReader reader = new JsonReader(fileIn);
 			Config cfg = (Config) reader.readObject();
-			System.out.println(cfg.movieFilenames[0]);
 			reader.close();
 			fileIn.close();
 			return cfg;

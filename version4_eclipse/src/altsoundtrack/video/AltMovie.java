@@ -29,6 +29,12 @@ public class AltMovie {
 	public void display() {
 	}
 
+	public void play(Object path) {
+	}
+
+	public void stop() {
+	}
+
 	/**
 	 * Provides the current bitmap to be analyzed
 	 *

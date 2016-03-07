@@ -20,5 +20,7 @@ public interface IAnalysis {
 
 	public void initialize(int w, int h, int fps);
 
+	public void restart();
+
 	public OscMessage getOSCmsg();
 }

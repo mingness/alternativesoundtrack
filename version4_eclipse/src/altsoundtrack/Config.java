@@ -8,7 +8,6 @@ package altsoundtrack;
  */
 public class Config {
 	public String moviePath = "movies/";
-	public String[] movieFilenames = { "helloworld.mp4" };
 
 	public String supercolliderIp = "127.0.0.1";
 	public int supercolliderPort = 57120;

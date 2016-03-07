@@ -2,7 +2,6 @@ package altsoundtrack.video;
 
 import java.io.File;
 
-import altsoundtrack.Config;
 import processing.core.PApplet;
 import processing.core.PImage;
 import processing.video.Movie;
@@ -14,13 +13,15 @@ import processing.video.Movie;
  *
  */
 public class AltMovieFile extends AltMovie {
-	private final Movie v;
+	private Movie v;
 
-	public AltMovieFile(PApplet p5, Config cfg, int movieId) {
+	public AltMovieFile(PApplet p5) {
 		this.p5 = p5;
+	}
 
-		File f = new File(p5.sketchPath() + File.separator + cfg.moviePath
-				+ File.separator + cfg.movieFilenames[1]);
+	@Override
+	public void play(Object path) {
+		File f = new File((String) path);
 
 		v = new Movie(p5, f.getAbsolutePath());
 		v.loop();
@@ -28,14 +29,19 @@ public class AltMovieFile extends AltMovie {
 	}
 
 	@Override
+	public void stop() {
+		v.stop();
+		v = null;
+	}
+
+	@Override
 	public boolean available() {
-		if (v.available()) {
+		if (v != null && v.available()) {
 			v.read();
 			v.loadPixels();
 			return true;
-		} else {
-			return false;
 		}
+		return false;
 	}
 
 	@Override

@@ -40,6 +40,11 @@ public class SequencerAnalysis implements IAnalysis {
 		initialized = true;
 	}
 
+	@Override
+	public void restart() {
+		initialized = false;
+	}
+
 	private void incStep() {
 		step = (step + 1) % numPixelTests;
 		nextCheckMs += 125;

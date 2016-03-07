@@ -1,5 +1,6 @@
 package altsoundtrack;
 
+import java.io.File;
 import java.util.ArrayList;
 
 import altsoundtrack.video.AltMovie;
@@ -10,6 +11,9 @@ import analysis.HistogramAnalysis;
 import analysis.IAnalysis;
 import analysis.OpticalFlowAnalysis;
 import analysis.SequencerAnalysis;
+import controlP5.CallbackEvent;
+import controlP5.CallbackListener;
+import controlP5.ControlP5;
 import netP5.NetAddress;
 import oscP5.OscMessage;
 import oscP5.OscP5;
@@ -32,13 +36,17 @@ public class Main extends PApplet {
 	private ConfigManager cfgManager;
 
 	// Video
-	AltMovie video;
+	private AltMovie video;
+	private File[] movies;
+	private int whichMovie = 0;
+	private boolean loadMovie = false;
 
 	// Analyses
 	ArrayList<IAnalysis> analyses = new ArrayList<IAnalysis>();
 
 	// Control panel
 	ControlFrame cf;
+	CallbackListener cb;
 
 	// In Processing 3 you specify size() inside settings()
 	@Override
@@ -63,12 +71,6 @@ public class Main extends PApplet {
 		supercollider = new NetAddress(cfg.supercolliderIp,
 				cfg.supercolliderPort);
 
-		if (cfg.useWebcam) {
-			video = new AltMovieWebcam(this, cfg);
-		} else {
-			video = new AltMovieFile(this, cfg, 1);
-		}
-
 		analyses.add(new HistogramAnalysis(this));
 		analyses.add(new FrameDiffAnalysis(this));
 		analyses.add(new OpticalFlowAnalysis(this));
@@ -76,7 +78,35 @@ public class Main extends PApplet {
 
 		frameRate(cfg.frameRate);
 
-		cf = new ControlFrame(analyses);
+		if (cfg.useWebcam) {
+			video = new AltMovieWebcam(this);
+			video.play(cfg.webcamId);
+		} else {
+			File path = new File(cfg.moviePath);
+			if (path.isDirectory()) {
+				video = new AltMovieFile(this);
+
+				movies = path.listFiles();
+
+				video.play(movies[whichMovie].getAbsolutePath());
+			}
+		}
+
+		cb = new CallbackListener() {
+			@Override
+			public void controlEvent(CallbackEvent e) {
+				if (e.getAction() == ControlP5.ACTION_BROADCAST) {
+					whichMovie = (int) e.getController().getValue();
+					loadMovie = true;
+				}
+			}
+		};
+
+		cf = new ControlFrame(analyses, movies, cb);
+	}
+
+	public void onLoadMovie() {
+
 	}
 
 	/*
@@ -85,6 +115,18 @@ public class Main extends PApplet {
 	 */
 	@Override
 	public void draw() {
+		if (loadMovie) {
+			video.stop();
+			video.play(movies[whichMovie].getAbsolutePath());
+
+			// Restart analyses, since video resolution
+			// might have changed
+			for (IAnalysis analysis : analyses) {
+				analysis.restart();
+			}
+			loadMovie = false;
+		}
+
 		if (!video.available()) {
 			return;
 		}
