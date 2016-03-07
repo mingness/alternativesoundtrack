@@ -76,8 +76,7 @@ public class Main extends PApplet {
 
 		frameRate(cfg.frameRate);
 
-		cf = new ControlFrame();
-		cf.initialize(analyses);
+		cf = new ControlFrame(analyses);
 	}
 
 	/*

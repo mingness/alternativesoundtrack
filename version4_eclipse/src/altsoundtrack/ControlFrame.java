@@ -9,24 +9,30 @@ import controlP5.ControlP5;
 import processing.core.PApplet;
 
 public class ControlFrame extends PApplet {
-	ControlP5 cp5;
+	private ControlP5 cp5;
+	private final ArrayList<IAnalysis> analyses;
 
-	public ControlFrame() {
+	public ControlFrame(ArrayList<IAnalysis> analyses) {
 		super();
 		PApplet.runSketch(new String[] { this.getClass().getName() }, this);
+		this.analyses = analyses;
 	}
 
 	@Override
 	public void settings() {
-		size(400, 150);
+		size(200, 400);
 	}
 
-	public void initialize(ArrayList<IAnalysis> analyses) {
-
+	@Override
+	public void setup() {
 		// Window settings
 		surface.setLocation(10, 10);
-		surface.setTitle("Alternative Soundtrack - control panel");
+		surface.setTitle("AltSndtrck - Control panel");
 
+		buildPanel();
+	}
+
+	private void buildPanel() {
 		// Start ControlP5 for creating an interface
 		cp5 = new ControlP5(this);
 
@@ -54,7 +60,7 @@ public class ControlFrame extends PApplet {
 				String name = m.group(1);
 				// When pressed, toggle the "enabled" property
 				// of the analysis.
-				cp5.addToggle(analysis, "enabled").setLabel(name);
+				cp5.addToggle(analysis, "enabled").setLabel(name).linebreak();
 			}
 		}
 	}
