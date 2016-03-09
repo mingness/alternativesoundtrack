@@ -39,7 +39,7 @@ public class Main extends PApplet {
 	private AltMovie video;
 	private File[] movies;
 	private int whichMovie = 0;
-	private boolean loadMovie = false;
+	private boolean whichMovieChanged = false;
 
 	// Analyses
 	ArrayList<IAnalysis> analyses = new ArrayList<IAnalysis>();
@@ -84,10 +84,8 @@ public class Main extends PApplet {
 		} else {
 			File path = new File(cfg.moviePath);
 			if (path.isDirectory()) {
-				video = new AltMovieFile(this);
-
 				movies = path.listFiles();
-
+				video = new AltMovieFile(this);
 				video.play(movies[whichMovie].getAbsolutePath());
 			}
 		}
@@ -95,27 +93,22 @@ public class Main extends PApplet {
 		cb = new CallbackListener() {
 			@Override
 			public void controlEvent(CallbackEvent e) {
-				if (e.getAction() == ControlP5.ACTION_BROADCAST) {
+				if (e.getAction() == ControlP5.ACTION_BROADCAST
+						&& e.getController().getName().equals("movies")) {
 					whichMovie = (int) e.getController().getValue();
-					loadMovie = true;
+					whichMovieChanged = true;
 				}
 			}
 		};
 
-		cf = new ControlFrame(analyses, movies, cb);
+		cf = new ControlFrame();
+		cf.setAnalyses(analyses);
+		cf.setMovies(movies);
+		cf.setCallback(cb);
 	}
 
-	public void onLoadMovie() {
-
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * @see processing.core.PApplet#draw()
-	 */
-	@Override
-	public void draw() {
-		if (loadMovie) {
+	private void update() {
+		if (whichMovieChanged) {
 			video.stop();
 			video.play(movies[whichMovie].getAbsolutePath());
 
@@ -124,8 +117,13 @@ public class Main extends PApplet {
 			for (IAnalysis analysis : analyses) {
 				analysis.restart();
 			}
-			loadMovie = false;
+			whichMovieChanged = false;
 		}
+	}
+
+	@Override
+	public void draw() {
+		update();
 
 		if (!video.available()) {
 			return;
