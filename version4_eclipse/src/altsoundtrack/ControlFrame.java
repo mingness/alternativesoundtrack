@@ -105,7 +105,7 @@ public class ControlFrame extends PApplet {
 			}
 			analysesChanged = false;
 		}
-		if (moviesChanged) {
+		if (moviesChanged && movies != null) {
 			String[] ll = new String[movies.length];
 			for (int i = 0; i < movies.length; i++) {
 				ll[i] = movies[i].getName();
