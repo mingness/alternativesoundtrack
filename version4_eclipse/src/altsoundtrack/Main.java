@@ -7,7 +7,7 @@ import altsoundtrack.video.AltMovie;
 import altsoundtrack.video.AltMovieFile;
 import altsoundtrack.video.AltMovieWebcam;
 import analysis.BaseAnalysis;
-import analysis.FrameDiffAnalysis;
+import analysis.BlobAnalysis;
 import analysis.HistogramAnalysis;
 import analysis.OpticalFlowAnalysis;
 import analysis.SequencerAnalysis;
@@ -73,9 +73,10 @@ public class Main extends PApplet {
 				cfg.supercolliderPort);
 
 		analyses.add(new HistogramAnalysis(this));
-		analyses.add(new FrameDiffAnalysis(this));
+		// analyses.add(new FrameDiffAnalysis(this));
 		analyses.add(new OpticalFlowAnalysis(this));
 		analyses.add(new SequencerAnalysis(this));
+		analyses.add(new BlobAnalysis(this));
 
 		frameRate(cfg.frameRate);
 
