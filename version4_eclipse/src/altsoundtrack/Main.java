@@ -6,14 +6,15 @@ import java.util.ArrayList;
 import altsoundtrack.video.AltMovie;
 import altsoundtrack.video.AltMovieFile;
 import altsoundtrack.video.AltMovieWebcam;
+import analysis.BaseAnalysis;
 import analysis.FrameDiffAnalysis;
 import analysis.HistogramAnalysis;
-import analysis.IAnalysis;
 import analysis.OpticalFlowAnalysis;
 import analysis.SequencerAnalysis;
 import controlP5.CallbackEvent;
 import controlP5.CallbackListener;
 import controlP5.ControlP5;
+import controlP5.Controller;
 import netP5.NetAddress;
 import oscP5.OscMessage;
 import oscP5.OscP5;
@@ -42,7 +43,7 @@ public class Main extends PApplet {
 	private boolean whichMovieChanged = false;
 
 	// Analyses
-	ArrayList<IAnalysis> analyses = new ArrayList<IAnalysis>();
+	ArrayList<BaseAnalysis> analyses = new ArrayList<BaseAnalysis>();
 
 	// Control panel
 	ControlFrame cf;
@@ -93,10 +94,16 @@ public class Main extends PApplet {
 		cb = new CallbackListener() {
 			@Override
 			public void controlEvent(CallbackEvent e) {
-				if (e.getAction() == ControlP5.ACTION_BROADCAST
-						&& e.getController().getName().equals("movies")) {
-					whichMovie = (int) e.getController().getValue();
-					whichMovieChanged = true;
+				if (e.getAction() == ControlP5.ACTION_BROADCAST) {
+					Controller<?> c = e.getController();
+					String name = c.getName();
+					if (name.equals("movies")) {
+						whichMovie = (int) c.getValue();
+						whichMovieChanged = true;
+					} else if (name
+							.startsWith(ControlFrame.TOGGLE_ANALYSIS_LABEL)) {
+						analyses.get(c.getId()).toggleEnabled();
+					}
 				}
 			}
 		};
@@ -114,7 +121,7 @@ public class Main extends PApplet {
 
 			// Restart analyses, since video resolution
 			// might have changed
-			for (IAnalysis analysis : analyses) {
+			for (BaseAnalysis analysis : analyses) {
 				analysis.restart();
 			}
 			whichMovieChanged = false;
@@ -133,7 +140,7 @@ public class Main extends PApplet {
 		drawProgressBar();
 
 		// Run all analyses
-		for (IAnalysis analysis : analyses) {
+		for (BaseAnalysis analysis : analyses) {
 			if (analysis.isInitialized()) {
 				if (analysis.isEnabled()) {
 					analysis.analyze(video.getImg());

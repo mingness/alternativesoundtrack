@@ -10,20 +10,14 @@ import processing.core.PImage;
  * @author hamoid
  *
  */
-public class OpticalFlowAnalysis implements IAnalysis {
-	private final PApplet p5;
+public class OpticalFlowAnalysis extends BaseAnalysis {
 	// This setting greatly affects the result
 	// More is less cpu intensive
 	private final int GRID_SIZE_PX = 30;
 
 	private float predictionTimeSec;
 
-	private boolean initialized = false;
-	public boolean enabled = false;
-
 	private int[] imgPixels;
-	private int imgWidth = 0;
-	private int imgHeight = 0;
 
 	// grid parameters
 	private int avgWindowSize; // -avgWindowSize .. +avgWindowSize
@@ -57,20 +51,18 @@ public class OpticalFlowAnalysis implements IAnalysis {
 	 *            Processing API and draw things on the screen
 	 */
 	public OpticalFlowAnalysis(PApplet p5) {
-		this.p5 = p5;
+		super(p5);
 	}
 
 	@Override
 	public void initialize(int w, int h, int fps) {
 		setFPS(fps);
-		imgWidth = w;
-		imgHeight = h;
 
 		avgWindowSize = GRID_SIZE_PX * 2;
 		gridStepPx2 = GRID_SIZE_PX / 2;
 
-		columnCount = imgWidth / GRID_SIZE_PX;
-		rowCount = imgHeight / GRID_SIZE_PX;
+		columnCount = w / GRID_SIZE_PX;
+		rowCount = h / GRID_SIZE_PX;
 
 		int cells = columnCount * rowCount;
 		par = new float[cells];
@@ -101,12 +93,7 @@ public class OpticalFlowAnalysis implements IAnalysis {
 
 		ft = new float[vectorCount];
 
-		initialized = true;
-	}
-
-	@Override
-	public void restart() {
-		initialized = false;
+		super.initialize(w, h, fps);
 	}
 
 	public void setFPS(int fps) {
@@ -198,19 +185,19 @@ public class OpticalFlowAnalysis implements IAnalysis {
 		if (x1 < 0) {
 			x1 = 0;
 		}
-		if (x2 >= imgWidth) {
-			x2 = imgWidth - 1;
+		if (x2 >= width) {
+			x2 = width - 1;
 		}
 		if (y1 < 0) {
 			y1 = 0;
 		}
-		if (y2 >= imgHeight) {
-			y2 = imgHeight - 1;
+		if (y2 >= height) {
+			y2 = height - 1;
 		}
 
 		sumr = sumg = sumb = 0.0f;
 		for (int y = y1; y <= y2; y++) {
-			for (int i = imgWidth * y + x1; i <= imgWidth * y + x2; i++) {
+			for (int i = width * y + x1; i <= width * y + x2; i++) {
 				pix = imgPixels[i];
 				b = pix & 0xFF; // blue
 				pix = pix >> 8;
@@ -275,8 +262,8 @@ public class OpticalFlowAnalysis implements IAnalysis {
 	 */
 	@Override
 	public void draw() {
-		float kx = p5.width / (float) imgWidth;
-		float ky = p5.height / (float) imgHeight;
+		float kx = p5.width / (float) width;
+		float ky = p5.height / (float) height;
 
 		for (int i = 0; i < columnCount * rowCount; i++) {
 			float u = predictionFrames * sflowx[i];
@@ -308,15 +295,5 @@ public class OpticalFlowAnalysis implements IAnalysis {
 		// PApplet.println(predictionFrames * sflowx[middleIndex] / gridStepPx,
 		// predictionFrames * sflowy[middleIndex] / gridStepPx);
 		return msg;
-	}
-
-	@Override
-	public boolean isInitialized() {
-		return initialized;
-	}
-
-	@Override
-	public boolean isEnabled() {
-		return enabled;
 	}
 }

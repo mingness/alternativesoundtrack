@@ -10,8 +10,12 @@ import processing.core.PImage;
  * @author hamoid
  *
  */
-public class SequencerAnalysis implements IAnalysis {
-	private final PApplet p5;
+public class SequencerAnalysis extends BaseAnalysis {
+
+	public SequencerAnalysis(PApplet p5) {
+		super(p5);
+	}
+
 	private final int numPixelTestsH = 4;
 	private final int numPixelTestsV = 4;
 	private final int numPixelTests = numPixelTestsH * numPixelTestsV;
@@ -19,31 +23,6 @@ public class SequencerAnalysis implements IAnalysis {
 	private int step;
 	private int nextCheckMs = 0;
 	private float x, y;
-	private int imgWidth = 0;
-	private int imgHeight = 0;
-	private boolean initialized = false;
-	public boolean enabled = false;
-
-	/**
-	 * @param p5
-	 *            Receive the Processing context so this class can access the
-	 *            Processing API and draw things on the screen
-	 */
-	public SequencerAnalysis(PApplet p5) {
-		this.p5 = p5;
-	}
-
-	@Override
-	public void initialize(int w, int h, int fps) {
-		imgWidth = w;
-		imgHeight = h;
-		initialized = true;
-	}
-
-	@Override
-	public void restart() {
-		initialized = false;
-	}
 
 	private void incStep() {
 		step = (step + 1) % numPixelTests;
@@ -64,7 +43,7 @@ public class SequencerAnalysis implements IAnalysis {
 		x = 0.25f + 1f / (numPixelTestsH + 2) * (step % numPixelTestsH);
 		y = 0.25f + 1f / (numPixelTestsV - 1) * (step / numPixelTestsV) / 2;
 		// calculate which pixel to sample from the image
-		int px = (int) (imgWidth * x + y * imgHeight * imgWidth);
+		int px = (int) (width * x + y * height * width);
 		// get the color
 		result = img.pixels[px];
 		// scale x and y to match the window to visualize the sampling location
@@ -108,15 +87,5 @@ public class SequencerAnalysis implements IAnalysis {
 			return msg;
 		}
 		return null;
-	}
-
-	@Override
-	public boolean isInitialized() {
-		return initialized;
-	}
-
-	@Override
-	public boolean isEnabled() {
-		return enabled;
 	}
 }

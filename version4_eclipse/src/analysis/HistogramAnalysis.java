@@ -13,7 +13,7 @@ import processing.core.PImage;
  * @author hamoid
  *
  */
-public class HistogramAnalysis implements IAnalysis {
+public class HistogramAnalysis extends BaseAnalysis {
 	private final int numBaseFreqs = 7;
 	private final int numOctaves = 7;
 	private final int numWaves = numBaseFreqs * numOctaves;
@@ -25,9 +25,6 @@ public class HistogramAnalysis implements IAnalysis {
 	private final int cap = 0;
 	private final float power = 2;
 	private final float[] hsb = { 0f, 0f, 0f };
-	private final PApplet p5;
-	private boolean initialized = false;
-	public boolean enabled = false;
 
 	/**
 	 * @param p5
@@ -35,7 +32,7 @@ public class HistogramAnalysis implements IAnalysis {
 	 *            Processing API and draw things on the screen
 	 */
 	public HistogramAnalysis(PApplet p5) {
-		this.p5 = p5;
+		super(p5);
 	}
 
 	/**
@@ -151,25 +148,5 @@ public class HistogramAnalysis implements IAnalysis {
 		msg.add(histLeft);
 		msg.add(histRight);
 		return msg;
-	}
-
-	@Override
-	public boolean isInitialized() {
-		return initialized;
-	}
-
-	@Override
-	public void initialize(int w, int h, int fps) {
-		initialized = true;
-	}
-
-	@Override
-	public void restart() {
-		initialized = false;
-	}
-
-	@Override
-	public boolean isEnabled() {
-		return enabled;
 	}
 }

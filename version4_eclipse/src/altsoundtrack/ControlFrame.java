@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import analysis.IAnalysis;
+import analysis.BaseAnalysis;
 import controlP5.CallbackListener;
 import controlP5.ControlP5;
 import controlP5.ScrollableList;
@@ -20,9 +20,11 @@ import processing.core.PApplet;
  *
  */
 public class ControlFrame extends PApplet {
+	public static String TOGGLE_ANALYSIS_LABEL = "toggleAnalysis";
+
 	private ControlP5 cp5;
 
-	private ArrayList<IAnalysis> analyses;
+	private ArrayList<BaseAnalysis> analyses;
 	private File[] movies;
 	private CallbackListener cb;
 
@@ -32,7 +34,7 @@ public class ControlFrame extends PApplet {
 	private boolean moviesChanged = false;
 	private boolean cbChanged = false;
 
-	public void setAnalyses(ArrayList<IAnalysis> analyses) {
+	public void setAnalyses(ArrayList<BaseAnalysis> analyses) {
 		this.analyses = analyses;
 		analysesChanged = true;
 	}
@@ -90,7 +92,8 @@ public class ControlFrame extends PApplet {
 			// Regexp to find "TheName" in "analysis.TheNameAnalysis"
 			Pattern p = Pattern.compile(".*?([A-Z].+)[A-Z].*");
 			// Create a toggle button for each analysis
-			for (IAnalysis analysis : analyses) {
+			for (int i = 0; i < analyses.size(); i++) {
+				BaseAnalysis analysis = analyses.get(i);
 				String className = analysis.getClass().getName();
 				Matcher m = p.matcher(className);
 
@@ -98,8 +101,8 @@ public class ControlFrame extends PApplet {
 					String name = m.group(1);
 					// When pressed, toggle the "enabled" property
 					// of the analysis.
-					analysisToggles.add(cp5.addToggle(analysis, "enabled")
-							.setLabel(name).setPosition(20, y));
+					analysisToggles.add(cp5.addToggle(TOGGLE_ANALYSIS_LABEL + i)
+							.setLabel(name).setPosition(20, y).setId(i));
 					y += 40;
 				}
 			}

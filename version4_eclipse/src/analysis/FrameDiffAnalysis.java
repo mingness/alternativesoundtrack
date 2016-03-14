@@ -11,8 +11,7 @@ import processing.core.PImage;
  * @author hamoid
  *
  */
-public class FrameDiffAnalysis implements IAnalysis {
-	private final PApplet p5;
+public class FrameDiffAnalysis extends BaseAnalysis {
 	private final int numPixelTests = 100;
 	private int numPixels;
 	private int firstTestPixel;
@@ -23,8 +22,6 @@ public class FrameDiffAnalysis implements IAnalysis {
 	private final int[] pixelB = new int[numPixelTests];
 	private final PGraphics diffGraph;
 	private final int sceneCutThreshold = 35;
-	private boolean initialized = false;
-	public boolean enabled = false;
 	// Maybe to implement:
 	// private final int sceneCutMinFrameDist = 5;
 
@@ -34,7 +31,7 @@ public class FrameDiffAnalysis implements IAnalysis {
 	 *            Processing API and draw things on the screen
 	 */
 	public FrameDiffAnalysis(PApplet p5) {
-		this.p5 = p5;
+		super(p5);
 		diffGraph = p5.createGraphics(p5.width, 64);
 	}
 
@@ -104,25 +101,5 @@ public class FrameDiffAnalysis implements IAnalysis {
 		// Send OSC msg to Supercollider
 		return movementSum > sceneCutThreshold ? new OscMessage("/scenecut")
 				: null;
-	}
-
-	@Override
-	public boolean isInitialized() {
-		return initialized;
-	}
-
-	@Override
-	public void initialize(int w, int h, int fps) {
-		initialized = true;
-	}
-
-	@Override
-	public void restart() {
-		initialized = false;
-	}
-
-	@Override
-	public boolean isEnabled() {
-		return enabled;
 	}
 }
