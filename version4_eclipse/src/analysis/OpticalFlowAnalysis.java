@@ -269,7 +269,7 @@ public class OpticalFlowAnalysis extends BaseAnalysis {
 			float u = predictionFrames * sflowx[i];
 			float v = predictionFrames * sflowy[i];
 
-			float len = u * u + v * v; // don't use sqrt for better performance
+			float len = u * u + v * v; // avoid sqrt for better performance
 			if (len >= 5 * 5) {
 				p5.stroke(0, 255, 0);
 				float x = kx * ((i % columnCount) * GRID_SIZE_PX + gridStepPx2);
@@ -287,13 +287,24 @@ public class OpticalFlowAnalysis extends BaseAnalysis {
 	 */
 	@Override
 	public OscMessage getOSCmsg() {
-		// Send OSC msg to Supercollider
+		float maxLen = 0;
+		int index = 0;
+		int itemCount = columnCount * rowCount;
+		for (int i = 0; i < itemCount; i++) {
+			float u = sflowx[i];
+			float v = sflowy[i];
+			float newlen = u * u + v * v;
+			if (newlen > maxLen) {
+				maxLen = newlen;
+				index = i;
+			}
+		}
+		// send longest vector and the normalized position of that vector in the
+		// list of vectors (first = 0.0, last = 1.0);
 		OscMessage msg = new OscMessage("/of");
-		int middleIndex = columnCount * rowCount / 2;
-		msg.add(predictionFrames * sflowx[middleIndex] / GRID_SIZE_PX);
-		msg.add(predictionFrames * sflowy[middleIndex] / GRID_SIZE_PX);
-		// PApplet.println(predictionFrames * sflowx[middleIndex] / gridStepPx,
-		// predictionFrames * sflowy[middleIndex] / gridStepPx);
+		msg.add(sflowx[index]);
+		msg.add(sflowy[index]);
+		msg.add(index / (float) itemCount);
 		return msg;
 	}
 }
