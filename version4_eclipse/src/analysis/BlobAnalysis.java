@@ -15,10 +15,7 @@ import processing.core.PImage;
  * Recommended: in a dark room, move it right to about 80%. It should show
  * flashlights and mobile phone screens.
  *
- * To do: extract the center of the shape (maybe just average 4 points from the
- * outline). Then send the return the point in an OSC message. Maybe add limits
- * for how many points, and a maximum area for the blobs (the library offers min
- * size, but not max size).
+ * To do: send more than one blob
  *
  * Cost: about 1 ms for the analysis.
  *
@@ -173,11 +170,23 @@ public class BlobAnalysis extends BaseAnalysis {
 	/**
 	 * Creates an OSC message containing the result of the analysis
 	 *
-	 * @return Message including an OscMessage if there was a scene cut or null
-	 *         otherwise
+	 * @return OscMessage with the coordinates of the first blob if found,
+	 *         otherwise null
 	 */
 	@Override
 	public OscMessage getOSCmsg() {
+		if (theBlobDetection.getBlobNb() > 0) {
+			Blob b = theBlobDetection.getBlob(0);
+			int middleIndex = b.getEdgeNb() / 2;
+			EdgeVertex v0 = b.getEdgeVertexA(0);
+			EdgeVertex v1 = b.getEdgeVertexA(middleIndex);
+
+			// send normalized coordinates of first found blob
+			OscMessage msg = new OscMessage("/blob");
+			msg.add((v0.x + v1.x) / 2);
+			msg.add((v0.y + v1.y) / 2);
+			return msg;
+		}
 		return null;
 	}
 }
