@@ -22,17 +22,17 @@ SynthDef('scenecutSynth', {
 
 // Optical flow synth test.
 SynthDef('opticalFlowSynth', {
-	arg pan, pitch;
+	arg pan, pitch, amp = 0;
 	var sig;
-	sig = 0.2 * SinOsc.ar([pitch * 20 + 440, pitch * 20 + 442]);
+	sig = amp * SinOsc.ar([pitch * 20 + 440, pitch * 20 + 442]);
 	Out.ar(0, Balance2.ar(sig[0], sig[1], pan.clip(-1, 1)));
 }).add;
 
 // Test sequencer sound. To be improved.
 SynthDef('seqSynth', {
-	arg pitch = 400, amp = 0.5;
+	arg pitch = 400, amp = 0.2;
     var sig;
-    sig = 0.2 * LFSaw.ar(pitch, mul: amp) * EnvGen.kr(Env.linen(0.01, 0.1, 0.3), doneAction: 2);
+    sig = amp * LFSaw.ar(pitch) * EnvGen.kr(Env.linen(0.01, 0.1, 0.3), doneAction: 2);
     Out.ar(0, sig ! 2);
 }).add;
 
@@ -48,6 +48,9 @@ SynthDef('seqSynth', {
 ~opticalflow = Synth('opticalFlowSynth');
 )
 
+~histogramL.setn(\freqs, Array.fill(48, { arg i; 2 ** (1 + (i*0.17)) + 50 }));
+~histogramR.setn(\freqs, Array.fill(48, { arg i; 2 ** (1 + (i*0.17)) + 51 }));
+
 (
 OSCdef('histListener', {
     arg msg;
@@ -62,6 +65,7 @@ OSCdef('ofListener', {
     arg msg;
 	~opticalflow.setn(\pan, msg[1]);
     ~opticalflow.setn(\pitch, msg[2]);
+	// msg[3] normalized id of longest vector
 }, "/of");
 OSCdef('seqListener', {
 	arg msg;
