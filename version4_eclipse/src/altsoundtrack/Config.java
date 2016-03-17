@@ -8,6 +8,8 @@ package altsoundtrack;
  */
 public class Config {
 	public String moviePath = "movies/";
+	public String dataPath = "data/";
+	public String bgImageFile = "bgImage.tif";
 
 	public String supercolliderIp = "127.0.0.1";
 	public int supercolliderPort = 57120;

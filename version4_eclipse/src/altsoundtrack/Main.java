@@ -1,6 +1,7 @@
 package altsoundtrack;
 
 import java.io.File;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 
 import altsoundtrack.video.AltMovie;
@@ -41,6 +42,7 @@ public class Main extends PApplet {
 	private File[] movies;
 	private int whichMovie = 0;
 	private boolean whichMovieChanged = false;
+	private PImage bgImage;
 
 	// Analyses
 	ArrayList<BaseAnalysis> analyses = new ArrayList<BaseAnalysis>();
@@ -71,6 +73,7 @@ public class Main extends PApplet {
 		osc = new OscP5(this, 12000);
 		supercollider = new NetAddress(cfg.supercolliderIp,
 				cfg.supercolliderPort);
+
 
 		analyses.add(new HistogramAnalysis(this));
 		// analyses.add(new FrameDiffAnalysis(this));
@@ -137,19 +140,22 @@ public class Main extends PApplet {
 			return;
 		}
 
-		video.display();
+//		video.display();
+		PImage v = video.getImg();
+		image(v,0,0,width,height);
 		drawProgressBar();
 
 		// Run all analyses
 		for (BaseAnalysis analysis : analyses) {
 			if (analysis.isInitialized()) {
 				if (analysis.isEnabled()) {
-					analysis.analyze(video.getImg());
+//					analysis.analyze(video.getImg());
+					analysis.analyze(v);
 					analysis.draw();
 					sendOsc(analysis.getOSCmsg());
 				}
 			} else {
-				PImage v = video.getImg();
+//				PImage v = video.getImg();
 				analysis.initialize(v.width, v.height, video.getFrameRate());
 			}
 		}
@@ -174,4 +180,10 @@ public class Main extends PApplet {
 		}
 	}
 
+	public void keyPressed() {
+		if (key == 'b' || key == 'B') {
+			bgImage = video.getImg();
+			bgImage.save(Paths.get(cfg.dataPath, cfg.bgImageFile).toString());
+		}
+	}
 }
