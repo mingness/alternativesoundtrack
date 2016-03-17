@@ -64,8 +64,8 @@ public class Main extends PApplet {
 			cfg = cfgManager.load();
 		} else {
 			cfg = new Config();
-			cfgManager.save(cfg);
 		}
+		cfgManager.save(cfg);
 
 		// OSC
 		osc = new OscP5(this, 12000);
