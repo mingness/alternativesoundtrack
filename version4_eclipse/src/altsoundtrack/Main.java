@@ -1,12 +1,14 @@
 package altsoundtrack;
 
 import java.io.File;
+import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 
 import altsoundtrack.video.AltMovie;
 import altsoundtrack.video.AltMovieFile;
 import altsoundtrack.video.AltMovieWebcam;
+import altsoundtrack.video.BgSubtract;
 import analysis.BaseAnalysis;
 import analysis.BlobAnalysis;
 import analysis.HistogramAnalysis;
@@ -42,7 +44,9 @@ public class Main extends PApplet {
 	private File[] movies;
 	private int whichMovie = 0;
 	private boolean whichMovieChanged = false;
+	private boolean doBgSub = true;
 	private PImage bgImage;
+	private BgSubtract bgsub;
 
 	// Analyses
 	ArrayList<BaseAnalysis> analyses = new ArrayList<BaseAnalysis>();
@@ -74,6 +78,21 @@ public class Main extends PApplet {
 		supercollider = new NetAddress(cfg.supercolliderIp,
 				cfg.supercolliderPort);
 
+		//Process	
+		if (doBgSub) {
+			if (Files.exists(Paths.get(cfg.dataPath, cfg.bgImageFile)) ) {
+				bgImage = loadImage(Paths.get(cfg.dataPath, cfg.bgImageFile).toString());
+			} else {
+				//just initialize with a black image
+				bgImage = createImage(video.getImg().width, video.getImg().height, PApplet.RGB);
+				bgImage.loadPixels();
+				for (int i = 0; i < bgImage.pixels.length; i++) {
+					bgImage.pixels[i] = color(0, 0, 0);
+				}
+				bgImage.updatePixels();		
+			}
+			bgsub = new BgSubtract(this, bgImage);
+		}
 
 		analyses.add(new HistogramAnalysis(this));
 		// analyses.add(new FrameDiffAnalysis(this));
@@ -142,6 +161,9 @@ public class Main extends PApplet {
 
 //		video.display();
 		PImage v = video.getImg();
+		if (doBgSub) {
+			v = bgsub.subtract(v);
+		}
 		image(v,0,0,width,height);
 		drawProgressBar();
 
@@ -184,6 +206,7 @@ public class Main extends PApplet {
 		if (key == 'b' || key == 'B') {
 			bgImage = video.getImg();
 			bgImage.save(Paths.get(cfg.dataPath, cfg.bgImageFile).toString());
+			bgsub.update(bgImage);
 		}
 	}
 }
