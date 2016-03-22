@@ -82,15 +82,7 @@ public class Main extends PApplet {
 		if (doBgSub) {
 			if (Files.exists(Paths.get(cfg.dataPath, cfg.bgImageFile)) ) {
 				bgImage = loadImage(Paths.get(cfg.dataPath, cfg.bgImageFile).toString());
-			} else {
-				//just initialize with a black image
-				bgImage = createImage(video.getImg().width, video.getImg().height, PApplet.RGB);
-				bgImage.loadPixels();
-				for (int i = 0; i < bgImage.pixels.length; i++) {
-					bgImage.pixels[i] = color(0, 0, 0);
-				}
-				bgImage.updatePixels();		
-			}
+			} 
 			bgsub = new BgSubtract(this, bgImage);
 		}
 
@@ -160,8 +152,8 @@ public class Main extends PApplet {
 		}
 
 //		video.display();
-		PImage v = video.getImg();
-		if (doBgSub) {
+		PImage v = video.getImg().copy();
+		if (doBgSub & bgImage != null) {
 			v = bgsub.subtract(v);
 		}
 		image(v,0,0,width,height);
@@ -206,7 +198,7 @@ public class Main extends PApplet {
 		if (key == 'b' || key == 'B') {
 			bgImage = video.getImg();
 			bgImage.save(Paths.get(cfg.dataPath, cfg.bgImageFile).toString());
-			bgsub.update(bgImage);
+			bgsub.setBGImage(bgImage);
 		}
 	}
 }
