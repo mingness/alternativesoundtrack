@@ -44,7 +44,7 @@ public class Main extends PApplet {
 	private File[] movies;
 	private int whichMovie = 0;
 	private boolean whichMovieChanged = false;
-	private boolean doBgSub = true;
+	private boolean doBgSub = false;
 	private PImage bgImage;
 	private BgSubtract bgsub;
 
