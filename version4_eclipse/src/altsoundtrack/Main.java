@@ -1,11 +1,14 @@
 package altsoundtrack;
 
 import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 
 import altsoundtrack.video.AltMovie;
 import altsoundtrack.video.AltMovieFile;
 import altsoundtrack.video.AltMovieWebcam;
+import altsoundtrack.video.BgSubtract;
 import analysis.BaseAnalysis;
 import analysis.BlobAnalysis;
 import analysis.HistogramAnalysis;
@@ -41,6 +44,9 @@ public class Main extends PApplet {
 	private File[] movies;
 	private int whichMovie = 0;
 	private boolean whichMovieChanged = false;
+	private boolean bgsubDefault = true;
+	private PImage bgImage;
+	private BgSubtract bgsub;
 
 	// Analyses
 	ArrayList<BaseAnalysis> analyses = new ArrayList<BaseAnalysis>();
@@ -64,13 +70,20 @@ public class Main extends PApplet {
 			cfg = cfgManager.load();
 		} else {
 			cfg = new Config();
-			cfgManager.save(cfg);
 		}
+		cfgManager.save(cfg);
 
 		// OSC
 		osc = new OscP5(this, 12000);
 		supercollider = new NetAddress(cfg.supercolliderIp,
 				cfg.supercolliderPort);
+
+		//Process	
+		bgsub = new BgSubtract(this, bgsubDefault);
+		if (Files.exists(Paths.get(cfg.dataPath, cfg.bgImageFile)) ) {
+			bgImage = loadImage(Paths.get(cfg.dataPath, cfg.bgImageFile).toString());
+		} 
+		bgsub.setBGImage(bgImage);
 
 		analyses.add(new HistogramAnalysis(this));
 		// analyses.add(new FrameDiffAnalysis(this));
@@ -104,6 +117,8 @@ public class Main extends PApplet {
 					} else if (name
 							.startsWith(ControlFrame.TOGGLE_ANALYSIS_LABEL)) {
 						analyses.get(c.getId()).toggleEnabled();
+					} else if (name.equals("bgsub")) {
+						bgsub.toggleEnabled();
 					}
 				}
 			}
@@ -112,6 +127,7 @@ public class Main extends PApplet {
 		cf = new ControlFrame();
 		cf.setAnalyses(analyses);
 		cf.setMovies(movies);
+		cf.setBgSub(bgsubDefault);
 		cf.setCallback(cb);
 	}
 
@@ -137,19 +153,25 @@ public class Main extends PApplet {
 			return;
 		}
 
-		video.display();
+//		video.display();
+		PImage v = video.getImg().copy();
+		if (bgsub.isEnabled() & bgImage != null) {
+			v = bgsub.subtract(v);
+		}
+		image(v,0,0,width,height);
 		drawProgressBar();
 
 		// Run all analyses
 		for (BaseAnalysis analysis : analyses) {
 			if (analysis.isInitialized()) {
 				if (analysis.isEnabled()) {
-					analysis.analyze(video.getImg());
+//					analysis.analyze(video.getImg());
+					analysis.analyze(v);
 					analysis.draw();
 					sendOsc(analysis.getOSCmsg());
 				}
 			} else {
-				PImage v = video.getImg();
+//				PImage v = video.getImg();
 				analysis.initialize(v.width, v.height, video.getFrameRate());
 			}
 		}
@@ -174,4 +196,11 @@ public class Main extends PApplet {
 		}
 	}
 
+	public void keyPressed() {
+		if (key == 'b' || key == 'B') {
+			bgImage = video.getImg();
+			bgImage.save(Paths.get(cfg.dataPath, cfg.bgImageFile).toString());
+			bgsub.setBGImage(bgImage);
+		}
+	}
 }
