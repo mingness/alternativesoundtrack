@@ -5,14 +5,15 @@ import processing.core.PImage;
 
 public class BgSubtract {
 	protected PApplet p5;
+	private boolean enabled;// = false;
 	private int numPixels;
 	private int[] bgR;
 	private int[] bgG;
 	private int[] bgB;
 
-	public BgSubtract(PApplet p5, PImage bgImage) {
+	public BgSubtract(PApplet p5, boolean enabledDefault) {
 		this.p5 = p5;
-		setBGImage(bgImage);
+		enabled = enabledDefault;
 	}
 
 	public void setBGImage(PImage bgImage) {
@@ -61,5 +62,13 @@ public class BgSubtract {
 		}
 		return img;
 	}	
+
+	public boolean isEnabled() {
+		return enabled;
+	}
+
+	public void toggleEnabled() {
+		enabled = !enabled;
+	}
 }
 

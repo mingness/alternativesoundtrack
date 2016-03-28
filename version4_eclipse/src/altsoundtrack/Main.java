@@ -44,7 +44,7 @@ public class Main extends PApplet {
 	private File[] movies;
 	private int whichMovie = 0;
 	private boolean whichMovieChanged = false;
-	private boolean doBgSub = false;
+	private boolean bgsubDefault = true;
 	private PImage bgImage;
 	private BgSubtract bgsub;
 
@@ -79,12 +79,11 @@ public class Main extends PApplet {
 				cfg.supercolliderPort);
 
 		//Process	
-		if (doBgSub) {
-			if (Files.exists(Paths.get(cfg.dataPath, cfg.bgImageFile)) ) {
-				bgImage = loadImage(Paths.get(cfg.dataPath, cfg.bgImageFile).toString());
-			} 
-			bgsub = new BgSubtract(this, bgImage);
-		}
+		bgsub = new BgSubtract(this, bgsubDefault);
+		if (Files.exists(Paths.get(cfg.dataPath, cfg.bgImageFile)) ) {
+			bgImage = loadImage(Paths.get(cfg.dataPath, cfg.bgImageFile).toString());
+		} 
+		bgsub.setBGImage(bgImage);
 
 		analyses.add(new HistogramAnalysis(this));
 		// analyses.add(new FrameDiffAnalysis(this));
@@ -118,6 +117,8 @@ public class Main extends PApplet {
 					} else if (name
 							.startsWith(ControlFrame.TOGGLE_ANALYSIS_LABEL)) {
 						analyses.get(c.getId()).toggleEnabled();
+					} else if (name.equals("bgsub")) {
+						bgsub.toggleEnabled();
 					}
 				}
 			}
@@ -126,6 +127,7 @@ public class Main extends PApplet {
 		cf = new ControlFrame();
 		cf.setAnalyses(analyses);
 		cf.setMovies(movies);
+		cf.setBgSub(bgsubDefault);
 		cf.setCallback(cb);
 	}
 
@@ -153,7 +155,7 @@ public class Main extends PApplet {
 
 //		video.display();
 		PImage v = video.getImg().copy();
-		if (doBgSub & bgImage != null) {
+		if (bgsub.isEnabled() & bgImage != null) {
 			v = bgsub.subtract(v);
 		}
 		image(v,0,0,width,height);

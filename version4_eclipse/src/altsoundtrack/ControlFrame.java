@@ -26,11 +26,13 @@ public class ControlFrame extends PApplet {
 
 	private ArrayList<BaseAnalysis> analyses;
 	private File[] movies;
+	private boolean bgsubEnabled;
 	private CallbackListener cb;
 
 	private final ArrayList<Toggle> analysisToggles = new ArrayList<Toggle>();
 
 	private boolean analysesChanged = false;
+	private boolean bgsubChanged = false;
 	private boolean moviesChanged = false;
 	private boolean cbChanged = false;
 
@@ -42,6 +44,11 @@ public class ControlFrame extends PApplet {
 	public void setMovies(File[] movies) {
 		this.movies = movies;
 		moviesChanged = true;
+	}
+
+	public void setBgSub(boolean bgsubEnabled) {
+		this.bgsubEnabled = bgsubEnabled;
+		bgsubChanged = true;
 	}
 
 	public void setCallback(CallbackListener cb) {
@@ -72,6 +79,10 @@ public class ControlFrame extends PApplet {
 		// Start ControlP5 to create the control panel
 		cp5 = new ControlP5(this);
 
+		cp5.addToggle("bgsub").setLabel("Background\nSubtraction").setPosition(20, 30)
+				.setColorActive(color(210,0,100)).setColorBackground(color(100,0,0))
+				.setColorForeground(color(190,0,0));
+
 		cp5.addScrollableList("movies").setPosition(100, 30).setSize(180, 100)
 				.setBarHeight(20).setItemHeight(20)
 				.setType(ScrollableList.LIST);
@@ -88,7 +99,7 @@ public class ControlFrame extends PApplet {
 			for (Toggle t : analysisToggles) {
 				t.remove();
 			}
-			int y = 30;
+			int y = 80;
 			// Regexp to find "TheName" in "analysis.TheNameAnalysis"
 			Pattern p = Pattern.compile(".*?([A-Z].+)[A-Z].*");
 			// Create a toggle button for each analysis
@@ -115,6 +126,10 @@ public class ControlFrame extends PApplet {
 			}
 			cp5.get(ScrollableList.class, "movies").setItems(ll);
 			moviesChanged = false;
+		}
+		if (bgsubChanged) {
+			cp5.get(Toggle.class, "bgsub").setValue(bgsubEnabled);
+			bgsubChanged = false;
 		}
 		if (cbChanged) {
 			cp5.addCallback(cb);
