@@ -299,12 +299,12 @@ public class OpticalFlowAnalysis extends BaseAnalysis {
 				index = i;
 			}
 		}
-		// send longest vector and the normalized position of that vector in the
-		// list of vectors (first = 0.0, last = 1.0);
+		// send longest vector info
 		OscMessage msg = new OscMessage("/of");
-		msg.add(sflowx[index]);
-		msg.add(sflowy[index]);
-		msg.add(index / (float) itemCount);
+		msg.add((float) Math.sqrt(maxLen)); // len NOT normalized
+		msg.add((float) Math.atan2(sflowy[index], sflowx[index])); // angle rad
+		msg.add((index % columnCount) / (float) columnCount); // x normalized
+		msg.add((index / columnCount) / (float) rowCount); // y normalized
 		return msg;
 	}
 }
