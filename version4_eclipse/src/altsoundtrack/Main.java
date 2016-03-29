@@ -27,7 +27,7 @@ import processing.core.PImage;
 /**
  * Main project file
  *
- * @author hamoid
+ * @author hamoid, mingness
  *
  */
 public class Main extends PApplet {
@@ -41,13 +41,16 @@ public class Main extends PApplet {
 
 	// Video
 	private AltMovie video;
+	private boolean useWebcam;
 	private File[] movies;
 	private int whichMovie = 0;
-	private boolean whichMovieChanged = false;
 	private boolean bgsubDefault = true;
 	private PImage bgImage;
 	private BgSubtract bgsub;
 
+	private boolean webcamChanged = false;
+	private boolean whichMovieChanged = false;
+	
 	// Analyses
 	ArrayList<BaseAnalysis> analyses = new ArrayList<BaseAnalysis>();
 
@@ -72,6 +75,7 @@ public class Main extends PApplet {
 			cfg = new Config();
 		}
 		cfgManager.save(cfg);
+		useWebcam = cfg.useWebcam;
 
 		// OSC
 		osc = new OscP5(this, 12000);
@@ -93,13 +97,15 @@ public class Main extends PApplet {
 
 		frameRate(cfg.frameRate);
 
-		if (cfg.useWebcam) {
+		File path = new File(cfg.moviePath);
+		if (path.isDirectory()) {
+			movies = path.listFiles();
+		}
+		if (useWebcam) {
 			video = new AltMovieWebcam(this);
 			video.play(cfg.webcamId);
 		} else {
-			File path = new File(cfg.moviePath);
-			if (path.isDirectory()) {
-				movies = path.listFiles();
+			if (movies != null) {
 				video = new AltMovieFile(this);
 				video.play(movies[whichMovie].getAbsolutePath());
 			}
@@ -119,6 +125,9 @@ public class Main extends PApplet {
 						analyses.get(c.getId()).toggleEnabled();
 					} else if (name.equals("bgsub")) {
 						bgsub.toggleEnabled();
+					} else if (name.equals("webcam")) {
+						useWebcam = c.getValue() != 0.;
+						webcamChanged = true;
 					}
 				}
 			}
@@ -126,14 +135,22 @@ public class Main extends PApplet {
 
 		cf = new ControlFrame();
 		cf.setAnalyses(analyses);
-		cf.setMovies(movies);
+		cf.setMovies(movies,whichMovie);
 		cf.setBgSub(bgsubDefault);
+		cf.setWebcam(useWebcam);
 		cf.setCallback(cb);
 	}
 
 	private void update() {
 		if (whichMovieChanged) {
-			video.stop();
+			if (useWebcam) {
+				useWebcam = false;
+				cf.setWebcam(useWebcam);
+				video.stop();
+				video = new AltMovieFile(this);
+			} else {
+				video.stop();
+			}
 			video.play(movies[whichMovie].getAbsolutePath());
 
 			// Restart analyses, since video resolution
@@ -142,7 +159,22 @@ public class Main extends PApplet {
 				analysis.restart();
 			}
 			whichMovieChanged = false;
-		}
+		} else if (webcamChanged) {
+			video.stop();
+			if (useWebcam) {
+				video = new AltMovieWebcam(this);
+				video.play(cfg.webcamId);
+			} else {
+				video = new AltMovieFile(this);
+				video.play(movies[whichMovie].getAbsolutePath());	
+			}
+			// Restart analyses, since video resolution
+			// might have changed
+			for (BaseAnalysis analysis : analyses) {
+				analysis.restart();
+			}
+			webcamChanged = false;
+		} 
 	}
 
 	@Override
