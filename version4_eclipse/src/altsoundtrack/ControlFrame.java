@@ -16,7 +16,7 @@ import processing.core.PApplet;
  * Control panel built using controlP5
  * See http://www.sojamo.de/libraries/controlP5/
  *
- * @author hamoid
+ * @author hamoid, mingness
  *
  */
 public class ControlFrame extends PApplet {
@@ -25,7 +25,9 @@ public class ControlFrame extends PApplet {
 	private ControlP5 cp5;
 
 	private ArrayList<BaseAnalysis> analyses;
+	private boolean useWebcam;
 	private File[] movies;
+	private int whichMovie;
 	private boolean bgsubEnabled;
 	private CallbackListener cb;
 
@@ -34,6 +36,7 @@ public class ControlFrame extends PApplet {
 	private boolean analysesChanged = false;
 	private boolean bgsubChanged = false;
 	private boolean moviesChanged = false;
+	private boolean webcamChanged = false;
 	private boolean cbChanged = false;
 
 	public void setAnalyses(ArrayList<BaseAnalysis> analyses) {
@@ -41,14 +44,20 @@ public class ControlFrame extends PApplet {
 		analysesChanged = true;
 	}
 
-	public void setMovies(File[] movies) {
+	public void setMovies(File[] movies, int whichMovie) {
 		this.movies = movies;
+		this.whichMovie = whichMovie;
 		moviesChanged = true;
 	}
 
 	public void setBgSub(boolean bgsubEnabled) {
 		this.bgsubEnabled = bgsubEnabled;
 		bgsubChanged = true;
+	}
+
+	public void setWebcam(boolean useWebcam) {
+		this.useWebcam = useWebcam;
+		webcamChanged = true;
 	}
 
 	public void setCallback(CallbackListener cb) {
@@ -83,7 +92,9 @@ public class ControlFrame extends PApplet {
 				.setColorActive(color(210,0,100)).setColorBackground(color(100,0,0))
 				.setColorForeground(color(190,0,0));
 
-		cp5.addScrollableList("movies").setPosition(100, 30).setSize(180, 100)
+		cp5.addToggle("webcam").setLabel("Webcam").setPosition(100, 30);
+
+		cp5.addScrollableList("movies").setPosition(100, 80).setSize(180, 100)
 				.setBarHeight(20).setItemHeight(20)
 				.setType(ScrollableList.LIST);
 	}
@@ -95,6 +106,10 @@ public class ControlFrame extends PApplet {
 	 * The flags are called xxxChanged.
 	 */
 	private void update() {
+		if (bgsubChanged) {
+			cp5.get(Toggle.class, "bgsub").setValue(bgsubEnabled);
+			bgsubChanged = false;
+		}
 		if (analysesChanged) {
 			for (Toggle t : analysisToggles) {
 				t.remove();
@@ -119,17 +134,18 @@ public class ControlFrame extends PApplet {
 			}
 			analysesChanged = false;
 		}
+		if (webcamChanged) {
+			cp5.get(Toggle.class, "webcam").setValue(useWebcam);
+			webcamChanged = false;
+		}
 		if (moviesChanged && movies != null) {
 			String[] ll = new String[movies.length];
 			for (int i = 0; i < movies.length; i++) {
 				ll[i] = movies[i].getName();
 			}
-			cp5.get(ScrollableList.class, "movies").setItems(ll);
+			cp5.get(ScrollableList.class, "movies").setItems(ll).setValue(whichMovie);
+			whichMovie = cp5.get(ScrollableList.class, "movies").getId();
 			moviesChanged = false;
-		}
-		if (bgsubChanged) {
-			cp5.get(Toggle.class, "bgsub").setValue(bgsubEnabled);
-			bgsubChanged = false;
 		}
 		if (cbChanged) {
 			cp5.addCallback(cb);
@@ -138,9 +154,11 @@ public class ControlFrame extends PApplet {
 
 	}
 
+	
+	
 	@Override
 	public void draw() {
-		update();
 		background(40);
+		update();
 	}
 }

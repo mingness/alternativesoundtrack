@@ -5,7 +5,7 @@ import processing.core.PImage;
 
 public class BgSubtract {
 	protected PApplet p5;
-	private boolean enabled;// = false;
+	private boolean enabled;
 	private int numPixels;
 	private int[] bgR;
 	private int[] bgG;
