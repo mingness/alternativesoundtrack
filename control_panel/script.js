@@ -6,6 +6,7 @@ var sliders = [
 ];
 var items = sliders.length;
 var band = 0;
+var touchState = 0;
 
 function drawBand(i) {
   var w = sliders[i].val * width;
@@ -36,16 +37,26 @@ function setup() {
 }
 
 function draw() {
+  switch(touchState) {
+    case 1:
+      band = Math.floor(items * touchY / windowHeight);
+      sliders[band].val = touchX / width;
+      drawBand(band);
+      touchState = 0;
+      break;
+    case 2:
+      sliders[band].val = touchX / windowWidth;
+      drawBand(band);
+      touchState = 0;
+      break;
+  }
 }
 function touchStarted() {
-  band = Math.floor(items * touchY / windowHeight);
-  sliders[band].val = touchX / width;
-  drawBand(band);
+  touchState = 1;
   return false;
 }
 function touchMoved() {
-  sliders[band].val = touchX / windowWidth;
-  drawBand(band);
+  touchState = 2;
   return false;
 }
 function windowResized() {
