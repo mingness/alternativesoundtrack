@@ -4,9 +4,10 @@ var sliders = [
   { name: 'amplitude' },
   { name: 'modulation' }
 ];
-var items = sliders.length;
-var band = 0;
-var touchState = 0;
+var items = sliders.length,
+  band = 0, 
+  value = 0,
+  touchState = 0;
 
 function drawBand(i) {
   var w = sliders[i].val * width;
@@ -35,19 +36,16 @@ function setup() {
   }
   drawAll();
 }
-
 function draw() {
   switch(touchState) {
     case 1:
       band = Math.floor(items * touchY / windowHeight);
-      sliders[band].val = touchX / width;
-      drawBand(band);
-      touchState = 0;
-      break;
     case 2:
-      sliders[band].val = touchX / windowWidth;
+      value = touchX / windowWidth;
+      sliders[band].val = value;
       drawBand(band);
       touchState = 0;
+      rhizome.send('/slider', [band, value])
       break;
   }
 }
@@ -63,3 +61,33 @@ function windowResized() {
   resizeCanvas(windowWidth, windowHeight);
   drawAll();
 }
+    
+$(function() {
+
+  rhizome.start(function(err) {
+    if (err) {
+      $('body').html('client failed starting : ' + err)
+      throw err
+    }
+
+    // subscribe to all messages
+    rhizome.send('/sys/subscribe', ['/'])
+  })
+
+  rhizome.on('message', function(address, args) { 
+    console.log(address, args);
+  })
+
+  rhizome.on('connected', function() {
+    alert('connected!')
+  })
+
+  rhizome.on('connection lost', function() {
+    alert('connection lost!')
+  })
+
+  rhizome.on('server full', function() {
+    alert('server is full!')
+  })
+
+})
