@@ -44,13 +44,13 @@ public class Main extends PApplet {
 	private boolean useWebcam;
 	private File[] movies;
 	private int whichMovie = 0;
-	private boolean bgsubDefault = true;
+	private final boolean bgsubDefault = true;
 	private PImage bgImage;
 	private BgSubtract bgsub;
 
 	private boolean webcamChanged = false;
 	private boolean whichMovieChanged = false;
-	
+
 	// Analyses
 	ArrayList<BaseAnalysis> analyses = new ArrayList<BaseAnalysis>();
 
@@ -61,8 +61,8 @@ public class Main extends PApplet {
 	// In Processing 3 you specify size() inside settings()
 	@Override
 	public void settings() {
-		size(600, 600);
-		// fullScreen();
+		// size(600, 600);
+		fullScreen();
 	}
 
 	@Override
@@ -82,11 +82,12 @@ public class Main extends PApplet {
 		supercollider = new NetAddress(cfg.supercolliderIp,
 				cfg.supercolliderPort);
 
-		//Process	
+		// Process
 		bgsub = new BgSubtract(this, bgsubDefault);
-		if (Files.exists(Paths.get(cfg.dataPath, cfg.bgImageFile)) ) {
-			bgImage = loadImage(Paths.get(cfg.dataPath, cfg.bgImageFile).toString());
-		} 
+		if (Files.exists(Paths.get(cfg.dataPath, cfg.bgImageFile))) {
+			bgImage = loadImage(
+					Paths.get(cfg.dataPath, cfg.bgImageFile).toString());
+		}
 		bgsub.setBGImage(bgImage);
 
 		analyses.add(new HistogramAnalysis(this));
@@ -135,7 +136,7 @@ public class Main extends PApplet {
 
 		cf = new ControlFrame();
 		cf.setAnalyses(analyses);
-		cf.setMovies(movies,whichMovie);
+		cf.setMovies(movies, whichMovie);
 		cf.setBgSub(bgsubDefault);
 		cf.setWebcam(useWebcam);
 		cf.setCallback(cb);
@@ -166,7 +167,7 @@ public class Main extends PApplet {
 				video.play(cfg.webcamId);
 			} else {
 				video = new AltMovieFile(this);
-				video.play(movies[whichMovie].getAbsolutePath());	
+				video.play(movies[whichMovie].getAbsolutePath());
 			}
 			// Restart analyses, since video resolution
 			// might have changed
@@ -174,7 +175,7 @@ public class Main extends PApplet {
 				analysis.restart();
 			}
 			webcamChanged = false;
-		} 
+		}
 	}
 
 	@Override
@@ -185,25 +186,25 @@ public class Main extends PApplet {
 			return;
 		}
 
-//		video.display();
+		// video.display();
 		PImage v = video.getImg().copy();
 		if (bgsub.isEnabled() & bgImage != null) {
 			v = bgsub.subtract(v);
 		}
-		image(v,0,0,width,height);
+		image(v, 0, 0, width, height);
 		drawProgressBar();
 
 		// Run all analyses
 		for (BaseAnalysis analysis : analyses) {
 			if (analysis.isInitialized()) {
 				if (analysis.isEnabled()) {
-//					analysis.analyze(video.getImg());
+					// analysis.analyze(video.getImg());
 					analysis.analyze(v);
 					analysis.draw();
 					sendOsc(analysis.getOSCmsg());
 				}
 			} else {
-//				PImage v = video.getImg();
+				// PImage v = video.getImg();
 				analysis.initialize(v.width, v.height, video.getFrameRate());
 			}
 		}
@@ -228,11 +229,20 @@ public class Main extends PApplet {
 		}
 	}
 
+	@Override
 	public void keyPressed() {
-		if (key == 'b' || key == 'B') {
-			bgImage = video.getImg();
-			bgImage.save(Paths.get(cfg.dataPath, cfg.bgImageFile).toString());
-			bgsub.setBGImage(bgImage);
+		switch (key) {
+			case 'b':
+			case 'B':
+				bgImage = video.getImg();
+				bgImage.save(
+						Paths.get(cfg.dataPath, cfg.bgImageFile).toString());
+				bgsub.setBGImage(bgImage);
+				break;
+			case 's':
+			case 'S':
+				save("/tmp/" + System.currentTimeMillis() + ".png");
+				break;
 		}
 	}
 }
