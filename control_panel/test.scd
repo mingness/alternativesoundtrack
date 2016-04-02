@@ -1,33 +1,34 @@
-
-thisProcess.openUDPPort(9002);
 (
-f = { |msg, time, replyAddr, recvPort|
-    if(msg[0] != '/status.reply') {
-        "At time %s received message % from % on port%\n".postf(
-			time, msg, replyAddr, recvPort )
-    }
-};
+~bands = 4;
+~rhizomeOSCPort = 9000;
+~listenOnPort = 9002;
+~rhizomeIP = "127.0.0.1";
+~rhizome = NetAddr(~rhizomeIP, ~rhizomeOSCPort);
+~rhizome.sendMsg("/sys/subscribe", ~listenOnPort, "/slider");
+"Subscribe to Rhizome. Ask it to send us /slider messages on port 9002"
 )
-thisProcess.addOSCRecvFunc(f);
-thisProcess.removeOSCRecvFunc(f);
 
-b = NetAddr.new("localhost", 9000);
-b.sendMsg("/sys/subscribe", 9002, "/");
+(
+q = Array.fill(~bands, { |i| {
+	arg amp = 0.0;
+	var frq = 100 * i + 600;
+	SinOsc.ar([frq, frq * 1.01], 0, amp)
+	}.play;
+});
+"Create an array of 4 test synthesizers to be controlled via OSC"
+)
 
-// Now sending stuff
-b.sendMsg("/hello", "there");
-
-n = NetAddr("127.0.0.1", 57120); // rhizome
-
-OSCdef('ofListener', {
+(
+OSCdef('oscListener', {
     arg msg;
-	var foo, len, angle, x, y;
-	# foo, len, angle, x, y = msg;
-	q.ofDelay = (0.1 / (1 + len)).max(0.01);
-	q.ofAmp = (len * 0.01).min(0.9);
-	q.ofX = x;
-	q.ofY = y;
-	// TODO: maybe use angle for panning
-}, "/of");
-"Listening to Processing via OSC"
+	var band = msg[1], amp = msg[2];
+	q[band].set("amp", amp);
+}, '/slider', recvPort: ~listenOnPort);
+"Start listening to OSC /slider messages on port 9002"
 )
+
+(
+~bands.do({|i| ~rhizome.sendMsg("/slider", i, 0.2.rand)});
+"Send random /slider values to Rhizome"
+)
+

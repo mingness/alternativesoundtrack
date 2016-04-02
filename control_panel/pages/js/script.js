@@ -1,31 +1,31 @@
 var sliders = [
-  { name: 'depth' },
-  { name: 'speed' },
-  { name: 'amplitude' },
-  { name: 'modulation' }
+  { name: 'A' },
+  { name: 'B' },
+  { name: 'C' },
+  { name: 'D' }
 ];
 var items = sliders.length,
   band = 0, 
   value = 0,
   touchState = 0;
 
-function drawBand(i) {
-  var w = sliders[i].val * width;
+function drawBand(band, val) {
+  var w = val * width;
   var h = height / items;
   fill(0);
-  rect(0, i * h, width, h);
+  rect(0, band * h, width, h);
 
   fill(80);
-  rect(0, i * h + h * 0.05, w, h * 0.9);
+  rect(0, band * h + h * 0.05, w, h * 0.9);
     
-  sliders[i].div.position(10, i * h + h * 0.5);
+  sliders[band].div.position(10, band * h + h * 0.5);
 }
 function drawAll() {
   background(0);
   noStroke();
   for(var i=0; i<items; i++) {
     sliders[i].val = random(1);
-    drawBand(i);
+    drawBand(i, sliders[i].val);
   }
 }
 function setup() {
@@ -43,7 +43,6 @@ function draw() {
     case 2:
       value = touchX / windowWidth;
       sliders[band].val = value;
-      drawBand(band);
       touchState = 0;
       rhizome.send('/slider', [band, value])
       break;
@@ -75,6 +74,7 @@ $(function() {
   })
 
   rhizome.on('message', function(address, args) { 
+    drawBand(args[0], args[1]);
     console.log(address, args);
   })
 
