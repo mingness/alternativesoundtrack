@@ -61,4 +61,10 @@ public class AltMovie {
 	public float currPos() {
 		return 0;
 	}
+	
+	/**
+	 * Set the normalized playback time
+	 */
+	public void setPos(float mLocation) {
+	}
 }

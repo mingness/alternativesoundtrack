@@ -44,12 +44,14 @@ public class Main extends PApplet {
 	private boolean useWebcam;
 	private File[] movies;
 	private int whichMovie = 0;
-	private final boolean bgsubDefault = true;
+	private final boolean bgsubDefault = false;
 	private PImage bgImage;
 	private BgSubtract bgsub;
+	private float mLocation;
 
 	private boolean webcamChanged = false;
 	private boolean whichMovieChanged = false;
+	private boolean mLocationChanged = false;
 
 	// Analyses
 	ArrayList<BaseAnalysis> analyses = new ArrayList<BaseAnalysis>();
@@ -129,6 +131,9 @@ public class Main extends PApplet {
 					} else if (name.equals("webcam")) {
 						useWebcam = c.getValue() != 0.;
 						webcamChanged = true;
+					} else if (name.equals("movieLocation")) {
+						mLocation = c.getValue();
+						mLocationChanged = true;
 					}
 				}
 			}
@@ -139,6 +144,7 @@ public class Main extends PApplet {
 		cf.setMovies(movies, whichMovie);
 		cf.setBgSub(bgsubDefault);
 		cf.setWebcam(useWebcam);
+		cf.setMovieLocation(0);
 		cf.setCallback(cb);
 	}
 
@@ -180,31 +186,33 @@ public class Main extends PApplet {
 
 	@Override
 	public void draw() {
+		if (mLocationChanged) {
+			video.setPos(mLocation);
+			mLocationChanged = false;
+		} else {
+			cf.setMovieLocation(video.currPos());
+		}
 		update();
 
 		if (!video.available()) {
 			return;
 		}
 
-		// video.display();
 		PImage v = video.getImg().copy();
 		if (bgsub.isEnabled() & bgImage != null) {
 			v = bgsub.subtract(v);
 		}
 		image(v, 0, 0, width, height);
-		drawProgressBar();
 
 		// Run all analyses
 		for (BaseAnalysis analysis : analyses) {
 			if (analysis.isInitialized()) {
 				if (analysis.isEnabled()) {
-					// analysis.analyze(video.getImg());
 					analysis.analyze(v);
 					analysis.draw();
 					sendOsc(analysis.getOSCmsg());
 				}
 			} else {
-				// PImage v = video.getImg();
 				analysis.initialize(v.width, v.height, video.getFrameRate());
 			}
 		}
@@ -215,12 +223,6 @@ public class Main extends PApplet {
 				"altsoundtrack.Main" };
 
 		PApplet.main(options);
-	}
-
-	private void drawProgressBar() {
-		stroke(0, 150, 0);
-		strokeWeight(4);
-		line(0, height - 2, video.currPos() * width, height - 2);
 	}
 
 	private void sendOsc(OscMessage msg) {
