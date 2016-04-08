@@ -21,7 +21,7 @@ module.exports = {
     }, {
       type: 'osc',
       config: {
-        port: 9000
+        port: 57130 
       }
     }
   ],

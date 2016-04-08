@@ -1,16 +1,47 @@
 <html>
   <head>
     <script src="/rhizome/rhizome.js"></script>
-    <script language="javascript" src="js/jquery-2.1.0.min.js"></script>
-    <script language="javascript" src="js/p5.js"></script>
-    <script language="javascript" src="js/p5.dom.js"></script>
-    <script language="javascript" src="js/script.js"></script>
-    <link rel="stylesheet" href="css/beauty.css">
-  <script>
-  </script>
+    <script src="js/jquery-2.1.0.min.js"></script>
+    <script src="js/nexusUI.min.js"></script>
+    <script src="js/index.js"></script>
+    <style type="text/css">
+      body {
+        background-color: #444;
+        color: #CCC;
+        font-family: sans-serif;
+      }
+      canvas {
+        height: 40px;
+        width: 120px;
+      }
+    </style>
   </head>
 
   <body>
+    <h3>Processing</h3>
 
+    <h4>Analyses</h4>
+    <div>
+      <canvas nx="toggle" id="/p5/a_hist"></canvas> Histogram<br/>
+      <canvas nx="toggle" id="/p5/a_of"></canvas> Optical Flow<br/>
+      <canvas nx="toggle" id="/p5/a_seq"></canvas> Sequencer<br/>
+      <canvas nx="toggle" id="/p5/a_blob"></canvas> Blob<br/>
+    </div>
+
+    <h4>Tweak</h4>
+    <div>
+      <canvas nx="toggle" id="/p5/display_enabled"></canvas> Display Enabled (Set to off for exhibition)<br/>
+      <canvas nx="toggle" id="/p5/bgsub"></canvas> Background Substraction
+      <canvas nx="button" id="/p5/set_bg"></canvas> Set Background <br/>
+      <canvas nx="button" id="/p5/screenshot"></canvas> Screenshot <br/>
+      <canvas nx="slider" id="/p5/of_regression"></canvas> Optical flow regression (more for noisy video)<br/>
+      <canvas nx="slider" id="/p5/of_smoothness"></canvas> Optical flow smooth (less for slow decay)<br/>
+    </div>
+
+    <h3>Supercollider</h3>
+    <div>
+      <canvas nx="slider" id="/sc/testA" width="400"></canvas> Test A<br/>
+      <canvas nx="slider" id="/sc/testB" width="400"></canvas> Test B<br/>
+    </div>
   </body>
 </html>

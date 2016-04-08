@@ -65,7 +65,7 @@ $(function() {
 
   rhizome.start(function(err) {
     if (err) {
-      $('body').html('client failed starting : ' + err)
+      $('body').html('client failed starting: ' + err)
       throw err
     }
 
