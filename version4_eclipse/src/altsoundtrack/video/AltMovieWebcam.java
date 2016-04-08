@@ -20,7 +20,7 @@ public class AltMovieWebcam extends AltMovie {
 	@Override
 	public void play(Object id) {
 		String[] cameras = Capture.list();
-		PApplet.printArray(cameras);
+		// PApplet.printArray(cameras);
 
 		v = new Capture(p5, cameras[(int) id]);
 		v.start();

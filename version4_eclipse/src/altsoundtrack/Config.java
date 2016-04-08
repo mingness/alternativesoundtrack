@@ -14,7 +14,12 @@ public class Config {
 	public String supercolliderIp = "127.0.0.1";
 	public int supercolliderPort = 57120;
 
+	public String rhizomeIp = "127.0.0.1";
+	public int rhizomePort = 57130;
+
+	public int listenOnPort = 57140;
+
 	public int frameRate = 30;
-	public boolean useWebcam = false;
+	public boolean useWebcam = true;
 	public int webcamId = 0;
 }

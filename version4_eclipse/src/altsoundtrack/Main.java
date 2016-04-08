@@ -14,10 +14,6 @@ import analysis.BlobAnalysis;
 import analysis.HistogramAnalysis;
 import analysis.OpticalFlowAnalysis;
 import analysis.SequencerAnalysis;
-import controlP5.CallbackEvent;
-import controlP5.CallbackListener;
-import controlP5.ControlP5;
-import controlP5.Controller;
 import netP5.NetAddress;
 import oscP5.OscMessage;
 import oscP5.OscP5;
@@ -34,6 +30,7 @@ public class Main extends PApplet {
 	// OSC
 	private OscP5 osc;
 	private NetAddress supercollider;
+	private NetAddress rhizome;
 
 	// Config
 	private Config cfg;
@@ -43,10 +40,11 @@ public class Main extends PApplet {
 	private AltMovie video;
 	private boolean useWebcam;
 	private File[] movies;
-	private int whichMovie = 0;
-	private final boolean bgsubDefault = true;
+	private final int whichMovie = 0;
+	private final boolean bgsubDefault = false;
 	private PImage bgImage;
 	private BgSubtract bgsub;
+	private boolean display_enabled = true;
 
 	private boolean webcamChanged = false;
 	private boolean whichMovieChanged = false;
@@ -54,15 +52,17 @@ public class Main extends PApplet {
 	// Analyses
 	ArrayList<BaseAnalysis> analyses = new ArrayList<BaseAnalysis>();
 
-	// Control panel
-	ControlFrame cf;
-	CallbackListener cb;
+	// Commands
+	private final static int CMD_NONE = 0;
+	private final static int CMD_SCREENSHOT = 1;
+	private final static int CMD_SET_BGSUB = 2;
+	private static int CMD = CMD_NONE;
 
 	// In Processing 3 you specify size() inside settings()
 	@Override
 	public void settings() {
-		// size(600, 600);
-		fullScreen();
+		size(960, 540);
+		// fullScreen(P2D);
 	}
 
 	@Override
@@ -78,9 +78,18 @@ public class Main extends PApplet {
 		useWebcam = cfg.useWebcam;
 
 		// OSC
-		osc = new OscP5(this, 12000);
+		osc = new OscP5(this, cfg.listenOnPort);
+
 		supercollider = new NetAddress(cfg.supercolliderIp,
 				cfg.supercolliderPort);
+
+		rhizome = new NetAddress(cfg.rhizomeIp, cfg.rhizomePort);
+
+		// Subscribe to Rhizome.
+		OscMessage subscribeMsg = new OscMessage("/sys/subscribe");
+		subscribeMsg.add(cfg.listenOnPort);
+		subscribeMsg.add("/p5");
+		osc.send(subscribeMsg, rhizome);
 
 		// Process
 		bgsub = new BgSubtract(this, bgsubDefault);
@@ -112,41 +121,13 @@ public class Main extends PApplet {
 			}
 		}
 
-		cb = new CallbackListener() {
-			@Override
-			public void controlEvent(CallbackEvent e) {
-				if (e.getAction() == ControlP5.ACTION_BROADCAST) {
-					Controller<?> c = e.getController();
-					String name = c.getName();
-					if (name.equals("movies")) {
-						whichMovie = (int) c.getValue();
-						whichMovieChanged = true;
-					} else if (name
-							.startsWith(ControlFrame.TOGGLE_ANALYSIS_LABEL)) {
-						analyses.get(c.getId()).toggleEnabled();
-					} else if (name.equals("bgsub")) {
-						bgsub.toggleEnabled();
-					} else if (name.equals("webcam")) {
-						useWebcam = c.getValue() != 0.;
-						webcamChanged = true;
-					}
-				}
-			}
-		};
-
-		cf = new ControlFrame();
-		cf.setAnalyses(analyses);
-		cf.setMovies(movies, whichMovie);
-		cf.setBgSub(bgsubDefault);
-		cf.setWebcam(useWebcam);
-		cf.setCallback(cb);
 	}
 
 	private void update() {
 		if (whichMovieChanged) {
 			if (useWebcam) {
 				useWebcam = false;
-				cf.setWebcam(useWebcam);
+				// cf.setWebcam(useWebcam);
 				video.stop();
 				video = new AltMovieFile(this);
 			} else {
@@ -178,33 +159,64 @@ public class Main extends PApplet {
 		}
 	}
 
+	private void processCommand() {
+		switch (CMD) {
+			case CMD_NONE:
+				return;
+			case CMD_SCREENSHOT:
+				String fname = "/tmp/" + System.currentTimeMillis() + ".png";
+				save(fname);
+				println("saved", fname);
+				break;
+			case CMD_SET_BGSUB:
+				bgImage = video.getImg();
+				bgImage.save(
+						Paths.get(cfg.dataPath, cfg.bgImageFile).toString());
+				bgsub.setBGImage(bgImage);
+				println("bg image set");
+				break;
+		}
+		CMD = CMD_NONE;
+	}
+
 	@Override
 	public void draw() {
+		processCommand();
 		update();
 
 		if (!video.available()) {
 			return;
 		}
 
-		// video.display();
-		PImage v = video.getImg().copy();
+		PImage v;
 		if (bgsub.isEnabled() & bgImage != null) {
+			v = video.getImg().copy();
 			v = bgsub.subtract(v);
+			if (display_enabled) {
+				image(v, 0, 0, width, height);
+			}
+		} else {
+			v = video.getImg();
+			if (display_enabled) {
+				video.display();
+			}
 		}
-		image(v, 0, 0, width, height);
-		drawProgressBar();
+
+		if (display_enabled) {
+			drawProgressBar();
+		}
 
 		// Run all analyses
 		for (BaseAnalysis analysis : analyses) {
 			if (analysis.isInitialized()) {
 				if (analysis.isEnabled()) {
-					// analysis.analyze(video.getImg());
 					analysis.analyze(v);
-					analysis.draw();
+					if (display_enabled) {
+						analysis.draw();
+					}
 					sendOsc(analysis.getOSCmsg());
 				}
 			} else {
-				// PImage v = video.getImg();
 				analysis.initialize(v.width, v.height, video.getFrameRate());
 			}
 		}
@@ -229,20 +241,53 @@ public class Main extends PApplet {
 		}
 	}
 
-	@Override
-	public void keyPressed() {
-		switch (key) {
-			case 'b':
-			case 'B':
-				bgImage = video.getImg();
-				bgImage.save(
-						Paths.get(cfg.dataPath, cfg.bgImageFile).toString());
-				bgsub.setBGImage(bgImage);
+	// It's good to implement an OscEventListener.
+	// It's a bit more verbose than oscEvent(), but
+	// this way OSC error messages are much clearer.
+	// Without it, errors are catched inside oscP5
+	// and we have no clue of knowing what's going
+	// wrong.
+	public void oscEvent(OscMessage msg) {
+		float val = 0;
+		if (msg.checkTypetag("f")) {
+			val = msg.get(0).floatValue();
+		}
+		switch (msg.addrPattern()) {
+			case "/sys/subscribed":
+				println("subscribed to Rhizome");
 				break;
-			case 's':
-			case 'S':
-				save("/tmp/" + System.currentTimeMillis() + ".png");
+			case "/p5/a_hist":
+				analyses.get(0).setEnabled(val > 0.5);
 				break;
+			case "/p5/a_of":
+				analyses.get(1).setEnabled(val > 0.5);
+				break;
+			case "/p5/a_seq":
+				analyses.get(2).setEnabled(val > 0.5);
+				break;
+			case "/p5/a_blob":
+				analyses.get(3).setEnabled(val > 0.5);
+				break;
+			case "/p5/bgsub":
+				bgsub.setEnabled(val > 0.5);
+				break;
+			case "/p5/set_bg":
+				CMD = CMD_SET_BGSUB;
+				break;
+			case "/p5/screenshot":
+				CMD = CMD_SCREENSHOT;
+				break;
+			case "/p5/display_enabled":
+				display_enabled = val > 0.5;
+				break;
+			case "/p5/of_regression":
+				analyses.get(0).setParams(0, val);
+				break;
+			case "/p5/of_smoothness":
+				analyses.get(0).setParams(1, val);
+				break;
+			default:
+				println("unexpected message received: " + msg);
 		}
 	}
 }

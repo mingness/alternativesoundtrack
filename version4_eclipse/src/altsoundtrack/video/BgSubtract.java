@@ -35,15 +35,16 @@ public class BgSubtract {
 	}
 
 	public PImage subtract(PImage img) {
-		if (numPixels == 0){
+		if (numPixels == 0) {
 			return img;
 		}
-		
+
 		int currNumPixels = img.width * img.height;
 		if (currNumPixels == numPixels) {
 			for (int i = 0; i < numPixels; i++) {
 				int currColor = img.pixels[i];
-				// Extract the red, green, and blue components from current pixel
+				// Extract the red, green, and blue components from current
+				// pixel
 				int currR = (currColor >> 16) & 0xFF; // Like red(), but faster
 				int currG = (currColor >> 8) & 0xFF;
 				int currB = currColor & 0xFF;
@@ -55,20 +56,19 @@ public class BgSubtract {
 				a = a << 24;
 				diffR = diffR << 16;
 				diffG = diffG << 8;
-	
+
 				// Equivalent to "color argb = color(r, g, b, a)" but faster
 				img.pixels[i] = a | diffR | diffG | diffB;
 			}
 		}
 		return img;
-	}	
+	}
 
 	public boolean isEnabled() {
 		return enabled;
 	}
 
-	public void toggleEnabled() {
-		enabled = !enabled;
+	public void setEnabled(boolean e) {
+		enabled = e;
 	}
 }
-

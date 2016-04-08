@@ -15,14 +15,15 @@ public class OpticalFlowAnalysis extends BaseAnalysis {
 	// More is less cpu intensive
 	private final int GRID_SIZE_PX = 30;
 
-	private float predictionTimeSec;
-
 	private int[] imgPixels;
 
 	// grid parameters
 	private int avgWindowSize; // -avgWindowSize .. +avgWindowSize
 	private int columnCount, rowCount;
 	private int gridStepPx2;
+
+	// just for drawing the vectors
+	private float predictionTimeSec;
 	private float predictionFrames;
 
 	// regression vectors
@@ -30,11 +31,11 @@ public class OpticalFlowAnalysis extends BaseAnalysis {
 	private int vectorCount;
 
 	// regularization term for regression
-	private final float fc = (float) Math.pow(10, 8); // larger values for noisy
-														// video
+	private float fc = (float) Math.pow(10, 8); // larger values for noisy
+												// video
 
 	// smoothing parameters
-	private final float smoothness = 0.2f; // smaller value for longer smoothing
+	private float smoothness = 0.2f; // smaller value for longer smoothing
 
 	// internally used variables
 	private float ar, ag, ab; // used as return value of pixave
@@ -255,6 +256,18 @@ public class OpticalFlowAnalysis extends BaseAnalysis {
 												// frame)
 		flowy[ig] = -2 * GRID_SIZE_PX * v / a; // optical flow y (pixel per
 												// frame)
+	}
+
+	@Override
+	public void setParams(int id, float val) {
+		switch (id) {
+			case 0:
+				fc = (float) Math.pow(10, 1 + val * 8);
+				break;
+			case 1:
+				smoothness = val;
+				break;
+		}
 	}
 
 	/**
