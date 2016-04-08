@@ -33,11 +33,15 @@ $(function() {
       throw err
     }
 
-    rhizome.send('/sys/subscribe', ['/'])
+    rhizome.send('/sys/subscribe', ['/panel'])
   })
 
   rhizome.on('message', function(address, args) { 
-    console.log('msg', address, args);
+    if(address === '/panel/video_time') {
+      var w = nx.widgets["/p5/video_time"];
+      w.val.value = args[0];
+      w.draw();
+    }
   })
 
   rhizome.on('connected', function() {

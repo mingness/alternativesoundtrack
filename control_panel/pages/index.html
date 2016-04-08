@@ -12,7 +12,7 @@
       }
       canvas {
         height: 40px;
-        width: 120px;
+        width: 200px;
       }
     </style>
   </head>
@@ -31,11 +31,12 @@
     <h4>Tweak</h4>
     <div>
       <canvas nx="toggle" id="/p5/display_enabled"></canvas> Display Enabled (Set to off for exhibition)<br/>
-      <canvas nx="toggle" id="/p5/bgsub"></canvas> Background Substraction
-      <canvas nx="button" id="/p5/set_bg"></canvas> Set Background <br/>
-      <canvas nx="button" id="/p5/screenshot"></canvas> Screenshot <br/>
+      <canvas nx="toggle" id="/p5/bgsub"></canvas> Enable BG Substraction
+      <canvas nx="button" id="/p5/set_bg"></canvas> Set BG <br/>
+      <canvas nx="button" id="/p5/screenshot"></canvas> Save screenshot <br/>
       <canvas nx="slider" id="/p5/of_regression"></canvas> Optical flow regression (more for noisy video)<br/>
       <canvas nx="slider" id="/p5/of_smoothness"></canvas> Optical flow smooth (less for slow decay)<br/>
+      <canvas nx="slider" id="/p5/video_time"></canvas> Video time<br/>
     </div>
 
     <h3>Supercollider</h3>
