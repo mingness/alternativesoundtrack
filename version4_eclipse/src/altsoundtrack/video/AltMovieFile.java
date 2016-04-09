@@ -63,4 +63,9 @@ public class AltMovieFile extends AltMovie {
 	public float currPos() {
 		return v.time() / v.duration();
 	}
+
+	@Override
+	public void setPos(float mLocation) {
+		v.jump(mLocation*v.duration());
+	}
 }

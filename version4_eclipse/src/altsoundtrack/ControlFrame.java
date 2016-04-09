@@ -10,6 +10,7 @@ import controlP5.CallbackListener;
 import controlP5.ControlP5;
 import controlP5.ScrollableList;
 import controlP5.Toggle;
+import controlP5.Slider;
 import processing.core.PApplet;
 
 /**
@@ -29,7 +30,9 @@ public class ControlFrame extends PApplet {
 	private File[] movies;
 	private int whichMovie;
 	private boolean bgsubEnabled;
+	private float mLocation;
 	private CallbackListener cb;
+	private Slider ml; 
 
 	private final ArrayList<Toggle> analysisToggles = new ArrayList<Toggle>();
 
@@ -37,6 +40,7 @@ public class ControlFrame extends PApplet {
 	private boolean bgsubChanged = false;
 	private boolean moviesChanged = false;
 	private boolean webcamChanged = false;
+	private boolean movieLocationChanged = false;
 	private boolean cbChanged = false;
 
 	public void setAnalyses(ArrayList<BaseAnalysis> analyses) {
@@ -58,6 +62,11 @@ public class ControlFrame extends PApplet {
 	public void setWebcam(boolean useWebcam) {
 		this.useWebcam = useWebcam;
 		webcamChanged = true;
+	}
+
+	public void setMovieLocation(float mLocation) {
+		this.mLocation = mLocation;
+		movieLocationChanged = true;
 	}
 
 	public void setCallback(CallbackListener cb) {
@@ -97,6 +106,8 @@ public class ControlFrame extends PApplet {
 		cp5.addScrollableList("movies").setPosition(100, 80).setSize(180, 100)
 				.setBarHeight(20).setItemHeight(20)
 				.setType(ScrollableList.LIST);
+		ml = cp5.addSlider("movieLocation").setLabel("Playback\nLocation")
+				.setPosition(20,350).setSize(200,20).setRange(0, 1);
 	}
 
 	/**
@@ -147,13 +158,19 @@ public class ControlFrame extends PApplet {
 			whichMovie = cp5.get(ScrollableList.class, "movies").getId();
 			moviesChanged = false;
 		}
+		if (movieLocationChanged) {
+			if (!useWebcam) {
+				ml.setBroadcast(false);
+				ml.setValue(mLocation);
+				ml.setBroadcast(true);
+			}
+			movieLocationChanged = false;
+		}
 		if (cbChanged) {
 			cp5.addCallback(cb);
 			cbChanged = false;
 		}
-
 	}
-
 	
 	
 	@Override

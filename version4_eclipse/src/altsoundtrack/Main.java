@@ -52,7 +52,10 @@ public class Main extends PApplet {
 	// Analyses
 	ArrayList<BaseAnalysis> analyses = new ArrayList<BaseAnalysis>();
 
-	// Commands
+	// Commands are used because OSC messages arrive in a different thread,
+	// which is not allowed to draw on the screen. So instead of drawing
+	// immediately, we store the command, and use it later inside the main
+	// graphics thread (draw loop).
 	private final static int CMD_NONE = 0;
 	private final static int CMD_SCREENSHOT = 1;
 	private final static int CMD_SET_BGSUB = 2;
@@ -120,7 +123,6 @@ public class Main extends PApplet {
 				video.play(movies[whichMovie].getAbsolutePath());
 			}
 		}
-
 	}
 
 	private void update() {
@@ -184,6 +186,11 @@ public class Main extends PApplet {
 		processCommand();
 		update();
 
+		// Update panel only every 10 frames to reduce network traffic.
+		if (frameCount % 10 == 0) {
+			sendOsc("/panel/video_time", video.currPos(), rhizome);
+		}
+
 		if (!video.available()) {
 			return;
 		}
@@ -202,10 +209,6 @@ public class Main extends PApplet {
 			}
 		}
 
-		if (display_enabled) {
-			drawProgressBar();
-		}
-
 		// Run all analyses
 		for (BaseAnalysis analysis : analyses) {
 			if (analysis.isInitialized()) {
@@ -214,7 +217,7 @@ public class Main extends PApplet {
 					if (display_enabled) {
 						analysis.draw();
 					}
-					sendOsc(analysis.getOSCmsg());
+					sendOsc(analysis.getOSCmsg(), supercollider);
 				}
 			} else {
 				analysis.initialize(v.width, v.height, video.getFrameRate());
@@ -229,16 +232,16 @@ public class Main extends PApplet {
 		PApplet.main(options);
 	}
 
-	private void drawProgressBar() {
-		stroke(0, 150, 0);
-		strokeWeight(4);
-		line(0, height - 2, video.currPos() * width, height - 2);
+	private void sendOsc(OscMessage msg, NetAddress to) {
+		if (msg != null) {
+			osc.send(msg, to);
+		}
 	}
 
-	private void sendOsc(OscMessage msg) {
-		if (msg != null) {
-			osc.send(msg, supercollider);
-		}
+	private void sendOsc(String path, float val, NetAddress to) {
+		OscMessage msg = new OscMessage(path);
+		msg.add(val);
+		osc.send(msg, to);
 	}
 
 	// It's good to implement an OscEventListener.
@@ -285,6 +288,9 @@ public class Main extends PApplet {
 				break;
 			case "/p5/of_smoothness":
 				analyses.get(0).setParams(1, val);
+				break;
+			case "/p5/video_time":
+				video.setPos(val);
 				break;
 			default:
 				println("unexpected message received: " + msg);
