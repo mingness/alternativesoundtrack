@@ -23,13 +23,11 @@ s.waitForBoot({
 		q.rhizome.sendMsg("/sys/subscribe", q.listenToRzOnPort, "/sc");
 		"Subscribe to Rhizome".postln;
 
-		// TODO: only load wav files
-
 		// Read folder and store file names in an randomized array
 		"Reading and scrambling folder content".postln;
 		q.files = PathName
 		.new(thisProcess.nowExecutingPath.dirname +/+ "audio")
-		.files.
+		.files
 		.select({ |item,i| item.fileName.toLower.endsWith(".wav")})
 		.scramble;
 		q.files.do({ arg item, i; ("  Found " ++ item.fullPath).postln; });
