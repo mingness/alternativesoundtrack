@@ -14,6 +14,11 @@ s.waitForBoot({
 		// just a container for things
 		q = ();
 
+		q.soundMorphDuration = 10.0;
+		q.maxSynths = 100;
+		q.maxAmp = 0.9;
+		q.lerpSpeed = 0.05;
+
 		q.rhizomeOSCPort = 57130;
 		q.listenToRzOnPort = 57150;
 		q.listenToP5OnPort = 57120;
@@ -153,9 +158,9 @@ s.waitForBoot({
 			var foo, len, angle, x, y;
 			# foo, len, angle, x, y = msg;
 			q.ofDelay = (0.1 / (1 + len)).max(0.01);
-			q.ofAmp = (len * 0.01).min(0.9);
-			q.ofX = ~lerp.value(q.ofX, x, 0.1);
-			q.ofY = ~lerp.value(q.ofY, y, 0.1);
+			q.ofAmp = (len * 0.01).min(q.maxAmp);
+			q.ofX = ~lerp.value(q.ofX, x, q.lerpSpeed);
+			q.ofY = ~lerp.value(q.ofY, y, q.lerpSpeed);
 			q.ofAngle = angle;
 		}, "/of", recvPort: q.listenToP5OnPort);
 
@@ -174,8 +179,8 @@ s.waitForBoot({
 					true
 				},
 				{
-					if(q.time < 10.0, {
-						if(s.numSynths < 100, {
+					if(q.time < q.soundMorphDuration, {
+						if(s.numSynths < q.maxSynths, {
 							Synth.grain(\grain, [
 								\bufNumCurrTop,    q.playingBuf[0],
 								\bufNumCurrBottom, q.playingBuf[1],
@@ -183,7 +188,7 @@ s.waitForBoot({
 								\bufNumNextBottom, q.playingBuf[3],
 								\x, q.ofX * 2 - 1 + 0.01.bilinrand,
 								\y, q.ofY * 2 - 1 + 0.01.bilinrand,
-								\time, q.time / 10,
+								\time, q.time / q.soundMorphDuration,
 								\dur, q.ofDelay * 5,
 								\amp, q.ofAmp,
 								\bus, q.fxBus
