@@ -34,10 +34,14 @@ s.waitForBoot({
 		q.filesNext = 0;
 
 		q.loadNext = {
-			var file = q.files[q.filesNext].fullPath;
-			("  Loading " ++ file).postln;
+			var file = q.files[q.filesNext],
+			path = file.fullPath,
+			fname = file.fileName;
+			("  Loading " ++ fname ++ " into " ++ q.buffersNext).postln;
 			// Only wav and aiff can be loaded
-			q.buffers[q.buffersNext] = Buffer.read(s, file, action: { ("  Loaded " ++ file).postln; });
+			q.buffers[q.buffersNext] = Buffer.read(s, path,
+				action: { ("  Loaded " ++ fname).postln; },
+				bufnum: q.buffersNext );
 			q.filesNext = (q.filesNext + 1) % q.files.size;
 			q.buffersNext = (q.buffersNext + 1) % q.buffers.size;
 		};
@@ -49,8 +53,6 @@ s.waitForBoot({
 		};
 
 		1.wait; // ------------------------- ---------------------------
-
-
 
 		// Drop all buffers
 		Buffer.freeAll;
