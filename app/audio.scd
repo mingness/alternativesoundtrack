@@ -83,10 +83,10 @@ s.waitForBoot({
 
 			x = (x + 1) / 2;
 
-			env = EnvGen.kr(Env.new([0, 1, 0], [0.01, dur]), doneAction: 2);
-			grainCurrTop = PlayBuf.ar(2, bufNumCurrTop, BufRateScale.kr(bufNumCurrTop), 1, BufFrames.ir(bufNumCurrTop) * x, 0);
+			env = EnvGen.kr(Env.new([0, 1, 0], [dur, dur * 4]), doneAction: 2);
+			grainCurrTop = PlayBuf.ar(2, bufNumCurrTop,    BufRateScale.kr(bufNumCurrTop),    1, BufFrames.ir(bufNumCurrTop)    * x, 0);
 			grainCurrBot = PlayBuf.ar(2, bufNumCurrBottom, BufRateScale.kr(bufNumCurrBottom), 1, BufFrames.ir(bufNumCurrBottom) * x, 0);
-			grainNextTop = PlayBuf.ar(2, bufNumNextTop, BufRateScale.kr(bufNumNextTop), 1, BufFrames.ir(bufNumNextTop) * x, 0);
+			grainNextTop = PlayBuf.ar(2, bufNumNextTop,    BufRateScale.kr(bufNumNextTop),    1, BufFrames.ir(bufNumNextTop)    * x, 0);
 			grainNextBot = PlayBuf.ar(2, bufNumNextBottom, BufRateScale.kr(bufNumNextBottom), 1, BufFrames.ir(bufNumNextBottom) * x, 0);
 
 			grainCurr = XFade2.ar(grainCurrTop, grainCurrBot, y);
@@ -111,8 +111,8 @@ s.waitForBoot({
 			var input;
 			input = In.ar(inBus, 2);
 
-			input = GVerb.ar(input, 200, 2, 0.3, 0.34, drylevel: -3, earlyreflevel: -9, taillevel: -11);
-			input = LPF.ar(input, Lag2.kr(cutoff, 5));
+			//input = GVerb.ar(input, 200, 2, 0.3, 0.34, drylevel: -3, earlyreflevel: -9, taillevel: -11);
+			//input = LPF.ar(input, Lag2.kr(cutoff, 5));
 
 			Out.ar(outBus, input);
 		}).add;
@@ -184,7 +184,7 @@ s.waitForBoot({
 								\x, q.ofX * 2 - 1 + 0.01.bilinrand,
 								\y, q.ofY * 2 - 1 + 0.01.bilinrand,
 								\time, q.time / 10,
-								\dur, q.ofDelay,
+								\dur, q.ofDelay * 5,
 								\amp, q.ofAmp,
 								\bus, q.fxBus
 							]);
