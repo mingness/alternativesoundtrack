@@ -152,9 +152,9 @@ s.waitForBoot({
 			# foo, len, angle, x, y = msg;
 			q.ofDelay = (0.1 / (1 + len)).max(0.01);
 			q.ofAmp = (len * 0.01).min(0.9);
-			// TODO: maybe use angle for panning
 			q.ofX = ~lerp.value(q.ofX, x, 0.1);
 			q.ofY = ~lerp.value(q.ofY, y, 0.1);
+			q.ofAngle = angle;
 		}, "/of", recvPort: q.listenToP5OnPort);
 
 		// From control panel (Rhizome)
@@ -189,6 +189,8 @@ s.waitForBoot({
 						});
 						}, {
 							q.time = 0.0;
+
+							"- - -".postln;
 
 							// start using next two buffers
 							q.playNext.value;
