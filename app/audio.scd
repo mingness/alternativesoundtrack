@@ -1,3 +1,4 @@
+~lerp = { |a,b,t| b-a*t+a };
 
 s.waitForBoot({
 	"".postln;
@@ -153,9 +154,9 @@ s.waitForBoot({
 			# foo, len, angle, x, y = msg;
 			q.ofDelay = (0.1 / (1 + len)).max(0.01);
 			q.ofAmp = (len * 0.01).min(0.9);
-			q.ofX = x;
-			q.ofY = y;
 			// TODO: maybe use angle for panning
+			q.ofX = ~lerp.value(q.ofX, x, 0.1);
+			q.ofY = ~lerp.value(q.ofY, y, 0.1);
 		}, "/of", recvPort: q.listenToP5OnPort);
 
 		// From control panel (Rhizome)
