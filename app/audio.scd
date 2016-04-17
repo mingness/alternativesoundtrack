@@ -14,8 +14,8 @@ s.waitForBoot({
 		// just a container for things
 		q = ();
 
-		q.soundMorphDuration = 10.0;
-		q.maxSynths = 100;
+		q.soundMorphDuration = 30.0;
+		q.maxSynths = 60;
 		q.maxAmp = 0.9;
 		q.lerpSpeed = 0.05;
 
@@ -82,7 +82,8 @@ s.waitForBoot({
 			y = -1.0,
 			time = 0.0,
 			dur = 0.06,
-			amp = 0.1;
+			amp = 0.1,
+			pan = 0;
 			var grain, grainCurr, grainNext, env, snd,
 			grainCurrTop, grainCurrBot, grainNextTop, grainNextBot;
 
@@ -103,21 +104,32 @@ s.waitForBoot({
 				thresh: 0.2,
 				slopeBelow: 0.1,
 				slopeAbove: 1,
-				clampTime: 0.01,
-				relaxTime: 0.01);
+				clampTime: dur * 0.2,
+				relaxTime: dur * 0.2);
 
-			Out.ar(bus, snd * env * amp);
+			snd = snd * env;
+
+			Out.ar(bus, Balance2.ar(snd[0], snd[1], pan * 0.8, amp));
 		}).add;
 
 		// Simple effects (reverb + LPF)
 
 		SynthDef("effect", {
-			arg outBus = 0, inBus, cutoff = 200;
-			var input;
-			input = In.ar(inBus, 2);
+			arg outBus = 0, inBus, k = 0.85;
+			var input = In.ar(inBus, 2);
 
-			//input = GVerb.ar(input, 200, 2, 0.3, 0.34, drylevel: -3, earlyreflevel: -9, taillevel: -11);
-			//input = LPF.ar(input, Lag2.kr(cutoff, 5));
+			input = OnePole.ar(input, Lag2.kr(k, 1));
+
+			input = GVerb.ar(input,
+				roomsize: 100,
+				revtime: 5,
+				damping: 0.2,
+				inputbw: 0.3,
+				spread: 25,
+				drylevel: 0.8,
+				earlyreflevel: 0.15,
+				taillevel: 0.15
+			);
 
 			Out.ar(outBus, input);
 		}).add;
@@ -133,12 +145,10 @@ s.waitForBoot({
 		q.fxBus = Bus.audio(s, 2);
 		q.fxSynth = Synth.new("effect", [
 			\inBus, q.fxBus,
-			\cutoff, 100
+			\k, 0.85;
 		]);
 
 		"Effects bus set up".postln;
-
-		//q.fxSynth.set(\cutoff, 800)
 
 		1.wait; // ------------------------- ---------------------------
 
@@ -150,6 +160,8 @@ s.waitForBoot({
 		q.ofAmp = 0;
 		q.ofX = 0;
 		q.ofY = 0;
+		q.ofAngle = 0;
+		q.testA = 0; // amp curve
 
 		// From Processing
 
@@ -158,7 +170,7 @@ s.waitForBoot({
 			var foo, len, angle, x, y;
 			# foo, len, angle, x, y = msg;
 			q.ofDelay = (0.1 / (1 + len)).max(0.01);
-			q.ofAmp = (len * 0.01).min(q.maxAmp);
+			q.ofAmp = (len * 0.01).min(q.maxAmp).lincurve(0, 1, 0, 1, 3 - (q.testA * 6));
 			q.ofX = ~lerp.value(q.ofX, x, q.lerpSpeed);
 			q.ofY = ~lerp.value(q.ofY, y, q.lerpSpeed);
 			q.ofAngle = angle;
@@ -167,7 +179,7 @@ s.waitForBoot({
 		// From control panel (Rhizome)
 
 		OSCdef('testA', { |msg| q.testA = msg[1]; }, "/sc/testA", recvPort: q.listenToRzOnPort);
-		OSCdef('testB', { |msg| q.testB = msg[1]; }, "/sc/testB", recvPort: q.listenToRzOnPort);
+		OSCdef('testB', { |msg| q.fxSynth.set(\k, 1 - msg[1]); }, "/sc/testB", recvPort: q.listenToRzOnPort);
 
 		"Listening to Processing and Rhizome via OSC".postln;
 
@@ -191,7 +203,8 @@ s.waitForBoot({
 								\time, q.time / q.soundMorphDuration,
 								\dur, q.ofDelay * 5,
 								\amp, q.ofAmp,
-								\bus, q.fxBus
+								\bus, q.fxBus,
+								\pan, q.ofAngle.sin
 							]);
 						});
 						}, {
@@ -201,10 +214,13 @@ s.waitForBoot({
 
 							// start using next two buffers
 							q.playNext.value;
+							0.05.wait;
 
 							// load files into the two buffers which just became available
 							q.loadNext.value;
+							0.05.wait;
 							q.loadNext.value;
+							0.05.wait;
 
 					});
 
