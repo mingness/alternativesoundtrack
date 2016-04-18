@@ -1,4 +1,4 @@
 #!/usr/bin/fish
 
-sclang audio.scd &
+nohup sclang audio.scd &
 

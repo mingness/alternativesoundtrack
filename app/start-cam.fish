@@ -1,4 +1,4 @@
 #!/usr/bin/fish
 
-java -jar AltSoundtrack.jar &
+nohup java -jar AltSoundtrack.jar &
 
