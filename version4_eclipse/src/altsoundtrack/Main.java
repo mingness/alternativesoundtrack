@@ -1,7 +1,6 @@
 package altsoundtrack;
 
 import java.io.File;
-import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 
@@ -9,11 +8,9 @@ import altsoundtrack.video.AltMovie;
 import altsoundtrack.video.AltMovieFile;
 import altsoundtrack.video.AltMovieWebcam;
 import altsoundtrack.video.BgSubtract;
+import altsoundtrack.video.Mask;
 import analysis.BaseAnalysis;
-import analysis.BlobAnalysis;
-import analysis.HistogramAnalysis;
 import analysis.OpticalFlowAnalysis;
-import analysis.SequencerAnalysis;
 import netP5.NetAddress;
 import oscP5.OscMessage;
 import oscP5.OscP5;
@@ -42,8 +39,8 @@ public class Main extends PApplet {
 	private File[] movies;
 	private final int whichMovie = 0;
 	private final boolean bgsubDefault = false;
-	private PImage bgImage;
 	private BgSubtract bgsub;
+	private Mask mask;
 	private boolean display_enabled = true;
 
 	private boolean webcamChanged = false;
@@ -59,6 +56,8 @@ public class Main extends PApplet {
 	private final static int CMD_NONE = 0;
 	private final static int CMD_SCREENSHOT = 1;
 	private final static int CMD_SET_BGSUB = 2;
+	private final static int CMD_CLEAR_MASK = 3;
+	private final static int CMD_ADD_MASK_POINT = 4;
 	private static int CMD = CMD_NONE;
 
 	// In Processing 3 you specify size() inside settings()
@@ -96,17 +95,15 @@ public class Main extends PApplet {
 
 		// Process
 		bgsub = new BgSubtract(this, bgsubDefault);
-		if (Files.exists(Paths.get(cfg.dataPath, cfg.bgImageFile))) {
-			bgImage = loadImage(
-					Paths.get(cfg.dataPath, cfg.bgImageFile).toString());
-		}
-		bgsub.setBGImage(bgImage);
+		bgsub.load(Paths.get(cfg.dataPath, cfg.bgImageFile));
 
-		analyses.add(new HistogramAnalysis(this));
+		mask = new Mask(this, false);
+
+		// analyses.add(new HistogramAnalysis(this));
 		// analyses.add(new FrameDiffAnalysis(this));
 		analyses.add(new OpticalFlowAnalysis(this));
-		analyses.add(new SequencerAnalysis(this));
-		analyses.add(new BlobAnalysis(this));
+		// analyses.add(new SequencerAnalysis(this));
+		// analyses.add(new BlobAnalysis(this));
 
 		frameRate(cfg.frameRate);
 
@@ -166,16 +163,18 @@ public class Main extends PApplet {
 			case CMD_NONE:
 				return;
 			case CMD_SCREENSHOT:
-				String fname = "/tmp/" + System.currentTimeMillis() + ".png";
+				String fname = cfg.screenshotPath;
 				save(fname);
-				println("saved", fname);
+				sendOsc("/panel/screenshot", 1, rhizome);
+				break;
+			case CMD_CLEAR_MASK:
+				mask.clear();
+				break;
+			case CMD_ADD_MASK_POINT:
+				mask.drawDot();
 				break;
 			case CMD_SET_BGSUB:
-				bgImage = video.getImg();
-				bgImage.save(
-						Paths.get(cfg.dataPath, cfg.bgImageFile).toString());
-				bgsub.setBGImage(bgImage);
-				println("bg image set");
+				bgsub.save(video.getImg());
 				break;
 		}
 		CMD = CMD_NONE;
@@ -187,7 +186,7 @@ public class Main extends PApplet {
 		update();
 
 		// Update panel only every 10 frames to reduce network traffic.
-		if (frameCount % 10 == 0) {
+		if (!useWebcam && frameCount % 10 == 0) {
 			sendOsc("/panel/video_time", video.currPos(), rhizome);
 		}
 
@@ -195,18 +194,20 @@ public class Main extends PApplet {
 			return;
 		}
 
-		PImage v;
-		if (bgsub.isEnabled() & bgImage != null) {
-			v = video.getImg().copy();
-			v = bgsub.subtract(v);
-			if (display_enabled) {
-				image(v, 0, 0, width, height);
+		PImage v = video.getImg();
+		if (bgsub.isEnabled()) {
+			bgsub.process(v);
+		}
+		if (mask.isEnabled()) {
+			if (mask.isInitialized()) {
+				mask.process(v);
+			} else {
+				mask.initialize(v.width, v.height, video.getFrameRate());
+				mask.load(Paths.get(cfg.dataPath, cfg.maskImageFile));
 			}
-		} else {
-			v = video.getImg();
-			if (display_enabled) {
-				video.display();
-			}
+		}
+		if (display_enabled) {
+			image(v, 0, 0, width, height);
 		}
 
 		// Run all analyses
@@ -259,10 +260,10 @@ public class Main extends PApplet {
 			case "/sys/subscribed":
 				println("subscribed to Rhizome");
 				break;
-			case "/p5/a_hist":
+			case "/p5/a_of":
 				analyses.get(0).setEnabled(val > 0.5);
 				break;
-			case "/p5/a_of":
+			case "/p5/a_hist":
 				analyses.get(1).setEnabled(val > 0.5);
 				break;
 			case "/p5/a_seq":
@@ -273,6 +274,16 @@ public class Main extends PApplet {
 				break;
 			case "/p5/bgsub":
 				bgsub.setEnabled(val > 0.5);
+				break;
+			case "/p5/mask_enabled":
+				mask.setEnabled(val > 0.5);
+				break;
+			case "/p5/clear_mask":
+				CMD = CMD_CLEAR_MASK;
+				break;
+			case "/p5/add_mask_point":
+				mask.setClick(msg.get(0).floatValue(), msg.get(1).floatValue());
+				CMD = CMD_ADD_MASK_POINT;
 				break;
 			case "/p5/set_bg":
 				CMD = CMD_SET_BGSUB;

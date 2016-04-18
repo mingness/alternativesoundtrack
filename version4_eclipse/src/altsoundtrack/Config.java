@@ -9,7 +9,9 @@ package altsoundtrack;
 public class Config {
 	public String moviePath = "movies/";
 	public String dataPath = "data/";
+	public String screenshotPath = "control_panel/pages/screenshot/screenshot.jpg";
 	public String bgImageFile = "bgImage.tif";
+	public String maskImageFile = "maskImage.tif";
 
 	public String supercolliderIp = "127.0.0.1";
 	public int supercolliderPort = 57120;

@@ -1,5 +1,18 @@
 body {
-  padding: 0px; 
-  margin: 0px;
+  background-color: #444;
+  color: #CCC;
+  font-family: sans-serif;
 }
-
+canvas {
+  margin: 4px 10px 4px 0px;
+  vertical-align: middle;
+}
+canvas[nx='toggle'],
+canvas[nx='slider'] {
+  height: 40px;
+  width: 200px;
+}
+#mask {
+  width: 640px;
+  height: 480px;
+}

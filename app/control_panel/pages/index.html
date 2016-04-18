@@ -4,17 +4,7 @@
     <script src="js/jquery-2.1.0.min.js"></script>
     <script src="js/nexusUI.min.js"></script>
     <script src="js/index.js"></script>
-    <style type="text/css">
-      body {
-        background-color: #444;
-        color: #CCC;
-        font-family: sans-serif;
-      }
-      canvas {
-        height: 40px;
-        width: 200px;
-      }
-    </style>
+    <link rel="stylesheet" href="css/beauty.css">
   </head>
 
   <body>
@@ -33,13 +23,20 @@
       <canvas nx="toggle" id="/p5/display_enabled"></canvas> Display Enabled (Set to off for exhibition)<br/>
       <canvas nx="toggle" id="/p5/bgsub"></canvas> Enable BG Substraction
       <canvas nx="button" id="/p5/set_bg"></canvas> Set BG <br/>
-      <canvas nx="button" id="/p5/screenshot"></canvas> Save screenshot <br/>
       <canvas nx="slider" id="/p5/of_regression"></canvas> Optical flow regression (more for noisy video)<br/>
       <canvas nx="slider" id="/p5/of_smoothness"></canvas> Optical flow smooth (less for slow decay)<br/>
       <canvas nx="slider" id="/p5/video_time"></canvas> Video time<br/>
     </div>
 
-    <h3>Supercollider</h3>
+    <h4>Mask</h4>
+    <div>
+      <canvas nx="button" id="/p5/screenshot"></canvas> Take screenshot <br/>
+      <canvas nx="button" id="/p5/clear_mask"></canvas> Clear mask <br/>
+      <canvas nx="toggle" id="/p5/mask_enabled"></canvas> Enable mask<br/>
+      <canvas id="mask"></canvas>
+    </div>
+
+    <h3>SuperCollider</h3>
     <div>
       <canvas nx="slider" id="/sc/testA" width="400"></canvas> Amplitude curve<br/>
       <canvas nx="slider" id="/sc/testB" width="400"></canvas> Filter<br/>
