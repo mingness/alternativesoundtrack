@@ -162,15 +162,17 @@ s.waitForBoot({
 		q.ofY = 0;
 		q.ofAngle = 0;
 		q.testA = 0; // amp curve
+		q.testC = 0; // min threshold
 
 		// From Processing
 
 		OSCdef('ofListener', {
 			arg msg;
-			var foo, len, angle, x, y;
+			var foo, len, angle, x, y; //len max value around 60
 			# foo, len, angle, x, y = msg;
+			// len.postln; // test values, when change optical flow grid
 			q.ofDelay = (0.1 / (1 + len)).max(0.01);
-			q.ofAmp = (len * 0.01).min(q.maxAmp).lincurve(0, 1, 0, 1, 3 - (q.testA * 6));
+			q.ofAmp = (len * 0.01).min(q.maxAmp).lincurve(q.testC, 1, 0, 1, 3 - (q.testA * 6));
 			q.ofX = ~lerp.value(q.ofX, x, q.lerpSpeed);
 			q.ofY = ~lerp.value(q.ofY, y, q.lerpSpeed);
 			q.ofAngle = angle;
@@ -180,6 +182,7 @@ s.waitForBoot({
 
 		OSCdef('testA', { |msg| q.testA = msg[1]; }, "/sc/testA", recvPort: q.listenToRzOnPort);
 		OSCdef('testB', { |msg| q.fxSynth.set(\k, 1 - msg[1]); }, "/sc/testB", recvPort: q.listenToRzOnPort);
+		OSCdef('testC', { |msg| q.testC = msg[1]; }, "/sc/testC", recvPort: q.listenToRzOnPort);
 
 		"Listening to Processing and Rhizome via OSC".postln;
 
