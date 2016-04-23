@@ -61,15 +61,18 @@ public class Mask {
 	}
 
 	public void drawDot() {
-		float w = pg.width * 0.078125f * 2;
-		pg.beginDraw();
-		pg.fill(255);
-		pg.noStroke();
-		pg.ellipse(lastClickPos.x * pg.width, lastClickPos.y * pg.height, w, w);
-		pg.endDraw();
-		img = pg.get();
-		updateMask();
-		save();
+		if (pg != null) {
+			float w = pg.width * 0.078125f * 2;
+			pg.beginDraw();
+			pg.fill(255);
+			pg.noStroke();
+			pg.ellipse(lastClickPos.x * pg.width, lastClickPos.y * pg.height, w,
+					w);
+			pg.endDraw();
+			img = pg.get();
+			updateMask();
+			save();
+		}
 	}
 
 	public void clear() {
@@ -88,12 +91,12 @@ public class Mask {
 			return;
 		}
 		img.loadPixels();
-		int black = pg.color(0);
-		int currNumPixels = img.width * img.height;
+		final int masked = pg.color(255, 0, 255);
+		final int currNumPixels = img.width * img.height;
 		if (currNumPixels == numPixels) {
 			for (int i = 0; i < numPixels; i++) {
 				if (mask[i]) {
-					img.pixels[i] = black;
+					img.pixels[i] = masked;
 				}
 			}
 		}
