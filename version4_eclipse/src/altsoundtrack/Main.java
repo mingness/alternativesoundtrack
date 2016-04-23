@@ -113,7 +113,8 @@ public class Main extends PApplet {
 		}
 		if (useWebcam) {
 			video = new AltMovieWebcam(this);
-			video.play(cfg.webcamId);
+			video.play(cfg.webcamWidth, cfg.webcamHeight, cfg.webcamName,
+					cfg.webcamFPS);
 		} else {
 			if (movies != null) {
 				video = new AltMovieFile(this);
@@ -144,7 +145,8 @@ public class Main extends PApplet {
 			video.stop();
 			if (useWebcam) {
 				video = new AltMovieWebcam(this);
-				video.play(cfg.webcamId);
+				video.play(cfg.webcamWidth, cfg.webcamHeight, cfg.webcamName,
+						cfg.webcamFPS);
 			} else {
 				video = new AltMovieFile(this);
 				video.play(movies[whichMovie].getAbsolutePath());

@@ -29,7 +29,7 @@ public class AltMovie {
 	public void display() {
 	}
 
-	public void play(Object path) {
+	public void play(Object... args) {
 	}
 
 	public void stop() {
@@ -61,7 +61,7 @@ public class AltMovie {
 	public float currPos() {
 		return 0;
 	}
-	
+
 	/**
 	 * Set the normalized playback time
 	 */

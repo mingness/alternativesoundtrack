@@ -23,5 +23,9 @@ public class Config {
 
 	public int frameRate = 30;
 	public boolean useWebcam = true;
-	public int webcamId = 0;
+
+	public String webcamName = "/dev/video0";
+	public int webcamWidth = 640;
+	public int webcamHeight = 480;
+	public int webcamFPS = 30;
 }
