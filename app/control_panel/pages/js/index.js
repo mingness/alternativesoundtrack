@@ -23,6 +23,14 @@ nx.onload = function() {
   // show display enabled by default
   nx.widgets['/p5/display_enabled'].val.value = 1;
   nx.widgets['/p5/display_enabled'].draw();
+  // set default value for sliders
+  nx.widgets['/p5/of_regression'].set({value: 0.5});
+  nx.widgets['/p5/of_smoothness'].set({value: 0.5});
+  nx.widgets['/p5/video_time'].set({value: 0.5});
+  nx.widgets['/sc/testA'].set({value: 0.5});
+  nx.widgets['/sc/testC'].set({value: 0.1});
+  nx.widgets['/sc/testB'].set({value: 0.0});
+
 }
 
 var maskCanvas, maskContext, screenshot;

@@ -172,7 +172,7 @@ s.waitForBoot({
 			# foo, len, angle, x, y = msg;
 			// len.postln; // test values, when change optical flow grid
 			q.ofDelay = (0.1 / (1 + len)).max(0.01);
-			q.ofAmp = (len * 0.01).min(q.maxAmp).lincurve(q.testC, 1, 0, 1, 3 - (q.testA * 6));
+			q.ofAmp = (len * 0.05).min(q.maxAmp).lincurve(q.testC * 0.5, 1, 0, 1, 3 - (q.testA * 6));
 			q.ofX = ~lerp.value(q.ofX, x, q.lerpSpeed);
 			q.ofY = ~lerp.value(q.ofY, y, q.lerpSpeed);
 			q.ofAngle = angle;
