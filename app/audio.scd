@@ -14,7 +14,7 @@ s.waitForBoot({
 		// just a container for things
 		q = ();
 
-		q.soundMorphDuration = 30.0;
+		q.soundMorphDuration = 40.0;
 		q.maxSynths = 60;
 		q.maxAmp = 0.9;
 		q.lerpSpeed = 0.05;

@@ -10,7 +10,7 @@ canvas {
 canvas[nx='toggle'],
 canvas[nx='slider'] {
   height: 40px;
-  width: 200px;
+  width: 400px;
 }
 #mask {
   width: 640px;
