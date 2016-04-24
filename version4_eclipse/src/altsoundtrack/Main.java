@@ -32,6 +32,8 @@ public class Main extends PApplet {
 	// Config
 	private Config cfg;
 	private ConfigManager cfgManager;
+	private ConsoleConfig console;
+	private ConsoleConfigManager consoleManager;
 
 	// Video
 	private AltMovie video;
@@ -92,6 +94,11 @@ public class Main extends PApplet {
 		subscribeMsg.add(cfg.listenOnPort);
 		subscribeMsg.add("/p5");
 		osc.send(subscribeMsg, rhizome);
+		
+		// Console Config
+		consoleManager = new ConsoleConfigManager("../app/control_panel/pages/js/cfgjson.js");
+		console = new ConsoleConfig();
+		consoleManager.save(console);
 
 		// Process
 		bgsub = new BgSubtract(this, bgsubDefault);
@@ -276,9 +283,13 @@ public class Main extends PApplet {
 				break;
 			case "/p5/bgsub":
 				bgsub.setEnabled(val > 0.5);
+				console.enableBGSub = bgsub.isEnabled();
+				consoleManager.save(console);
 				break;
 			case "/p5/mask_enabled":
 				mask.setEnabled(val > 0.5);
+				console.enableMask = mask.isEnabled();
+				consoleManager.save(console);
 				break;
 			case "/p5/clear_mask":
 				CMD = CMD_CLEAR_MASK;
@@ -295,15 +306,23 @@ public class Main extends PApplet {
 				break;
 			case "/p5/display_enabled":
 				display_enabled = val > 0.5;
+				console.displayEnabled = display_enabled;
+				consoleManager.save(console);
 				break;
 			case "/p5/of_regression":
 				analyses.get(0).setParams(0, val);
+				console.opticalFlowReg = val;
+				consoleManager.save(console);
 				break;
 			case "/p5/of_smoothness":
 				analyses.get(0).setParams(1, val);
+				console.opticalFlowSm = val;
+				consoleManager.save(console);
 				break;
 			case "/p5/video_time":
 				video.setPos(val);
+				console.videoTime = val;
+				consoleManager.save(console);
 				break;
 			default:
 				println("unexpected message received: " + msg);

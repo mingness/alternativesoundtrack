@@ -4,6 +4,8 @@ nx.colors.black = "#CCCCCC";
 nx.onload = function() {
   nx.sendsTo('js');
 
+  var cfg = JSON && JSON.parse(cfgjson) || $.parseJSON(cfgjson);
+
   for (var key in nx.widgets) {
     var w = nx.widgets[key];
     // set scrollbars to relative
@@ -20,12 +22,15 @@ nx.onload = function() {
       });
     }
   }
-  // set default value for sliders
-  nx.widgets['/p5/display_enabled'].set({value: 1.0});
-  nx.widgets['/p5/of_regression'].set({value: 0.5});
-  nx.widgets['/p5/of_smoothness'].set({value: 0.5});
-  nx.widgets['/p5/video_time'].set({value: 0.5});
-
+  // set values for tweak
+  nx.widgets['/p5/display_enabled'].set({value: cfg.displayEnabled});
+  nx.widgets['/p5/bgsub'].set({value: cfg.enableBGSub});
+  nx.widgets['/p5/of_regression'].set({value: cfg.opticalFlowReg});
+  nx.widgets['/p5/of_smoothness'].set({value: cfg.opticalFlowSm});
+  nx.widgets['/p5/video_time'].set({value: cfg.videoTime});
+  // set mask
+  nx.widgets['/p5/mask_enabled'].set({value: cfg.enableMask});
+  // set values for supercollider
   nx.widgets['/sc/testA'].set({value: 0.5});
   nx.widgets['/sc/testB'].set({value: 0.0});
   nx.widgets['/sc/testC'].set({value: 0.1});
