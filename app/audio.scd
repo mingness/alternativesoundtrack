@@ -29,13 +29,14 @@ s.waitForBoot({
 		"Subscribe to Rhizome".postln;
 
 		// Read folder and store file names in an randomized array
-		"Reading and scrambling folder content".postln;
-		q.files = PathName
+		"Reading folder content".postln;
+		q.filesRaw = PathName
 		.new(thisProcess.nowExecutingPath.dirname +/+ "audio")
 		.files
-		.select({ |item,i| item.fileName.toLower.endsWith(".wav")})
-		.scramble;
-		q.files.do({ arg item, i; ("  Found " ++ item.fullPath).postln; });
+		.select({ |item,i| item.fileName.toLower.endsWith(".wav")});
+		q.filesRaw.do({ arg item, i; ("  Found " ++ item.fullPath).postln; });
+		"Scrambling files".postln;
+		q.files = q.filesRaw.scramble;
 		q.filesNext = 0;
 
 		q.loadNext = {
@@ -47,6 +48,11 @@ s.waitForBoot({
 			q.buffers[q.buffersNext] = Buffer.read(s, path,
 				action: { ("  Loaded " ++ fname).postln; },
 				bufnum: q.buffersNext );
+			if ((q.filesNext + 1) == q.files.size, {
+				1.wait;
+				"Scrambling files".postln;
+				q.files = q.filesRaw.scramble;
+			});
 			q.filesNext = (q.filesNext + 1) % q.files.size;
 			q.buffersNext = (q.buffersNext + 1) % q.buffers.size;
 		};
