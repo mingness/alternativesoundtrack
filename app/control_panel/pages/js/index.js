@@ -67,6 +67,10 @@ $(function() {
         screenshot.src = 'screenshot/screenshot.jpg?' + Math.random();
       }, 200);
     }
+    if(address === '/panel/sc_files') {
+     $('#soundFile1').text(args[0]);
+     $('#soundFile2').text(args[1]);
+    }
   });
 
   rhizome.on('connected', function() {

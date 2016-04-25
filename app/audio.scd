@@ -51,7 +51,7 @@ s.waitForBoot({
 			if ((q.filesNext + 1) == q.files.size, {
 				1.wait;
 				"Scrambling files".postln;
-				q.files = q.filesRaw.scramble;
+				q.files = q.files.scramble;
 			});
 			q.filesNext = (q.filesNext + 1) % q.files.size;
 			q.buffersNext = (q.buffersNext + 1) % q.buffers.size;
@@ -195,6 +195,8 @@ s.waitForBoot({
 		1.wait; // ------------------------- ---------------------------
 
 		fork {
+			q.rhizome.sendMsg("/panel/sc_files",
+PathName.new(q.buffers[q.playingBuf[0]].path).fileName, PathName.new(q.buffers[q.playingBuf[1]].path).fileName);
 			while(
 				{
 					true
@@ -223,6 +225,7 @@ s.waitForBoot({
 
 							// start using next two buffers
 							q.playNext.value;
+							q.rhizome.sendMsg("/panel/sc_files", PathName.new(q.buffers[q.playingBuf[0]].path).fileName, PathName.new(q.buffers[q.playingBuf[1]].path).fileName);
 							0.05.wait;
 
 							// load files into the two buffers which just became available
