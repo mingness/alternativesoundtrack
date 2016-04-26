@@ -4,8 +4,6 @@ nx.colors.black = "#CCCCCC";
 nx.onload = function() {
   nx.sendsTo('js');
 
-  var cfg = JSON && JSON.parse(cfgjson) || $.parseJSON(cfgjson);
-
   for (var key in nx.widgets) {
     var w = nx.widgets[key];
     // set scrollbars to relative
@@ -22,22 +20,25 @@ nx.onload = function() {
       });
     }
   }
-  // set values for tweak
-  nx.widgets['/p5/display_enabled'].set({value: cfg.displayEnabled});
-  nx.widgets['/p5/bgsub'].set({value: cfg.enableBGSub});
-  nx.widgets['/p5/of_regression'].set({value: cfg.opticalFlowReg});
-  nx.widgets['/p5/of_smoothness'].set({value: cfg.opticalFlowSm});
-  nx.widgets['/p5/video_time'].set({value: cfg.videoTime});
-  // set mask
-  nx.widgets['/p5/mask_enabled'].set({value: cfg.enableMask});
-  // set values for supercollider
-  nx.widgets['/sc/testA'].set({value: 0.5});
-  nx.widgets['/sc/testB'].set({value: 0.0});
-  nx.widgets['/sc/testC'].set({value: 0.1});
-
 }
 
 var maskCanvas, maskContext, screenshot;
+var prPingTime, scPingTime = new Date().getTime();
+
+function send_pr_state() {
+  if ((new Date().getTime() - prPingTime) < 1000) { 
+    $('#pr_on').text("Running");
+  } else {
+    $('#pr_on').text("OFF");
+  }
+}
+function send_sc_state() {
+  if ((new Date().getTime() - scPingTime) < 1000) { 
+    $('#sc_on').text("Running");
+  } else {
+    $('#sc_on').text("OFF");
+  }
+}  
 
 $(function() {
   maskCanvas = document.getElementById('mask');
@@ -67,9 +68,26 @@ $(function() {
         screenshot.src = 'screenshot/screenshot.jpg?' + Math.random();
       }, 200);
     }
+    if(address === '/panel/pr_params') {
+     prPingTime = new Date().getTime();
+     // set values for tweak
+     nx.widgets['/p5/display_enabled'].set({value: args[0]});
+     nx.widgets['/p5/bgsub'].set({value: args[1]});
+     nx.widgets['/p5/of_regression'].set({value: args[2]});
+     nx.widgets['/p5/of_smoothness'].set({value: args[3]});
+     nx.widgets['/p5/video_time'].set({value: args[4]});
+     // set mask
+     nx.widgets['/p5/mask_enabled'].set({value: args[5]});
+   }
     if(address === '/panel/sc_files') {
      $('#soundFile1').text(args[0]);
      $('#soundFile2').text(args[1]);
+    }
+    if(address === '/panel/sc_params') {
+      scPingTime = new Date().getTime();
+      nx.widgets['/sc/testA'].set({value: args[0]});
+      nx.widgets['/sc/testB'].set({value: args[1]});
+      nx.widgets['/sc/testC'].set({value: args[2]});
     }
   });
 
@@ -116,4 +134,6 @@ $(function() {
   $('#mask').on('click', maskClick);
   $('#mask').on('touch', maskClick);
 
+  setInterval(send_pr_state, 1000);
+  setInterval(send_sc_state, 1000);
 });

@@ -30,13 +30,13 @@ s.waitForBoot({
 
 		// Read folder and store file names in an randomized array
 		"Reading folder content".postln;
-		q.filesRaw = PathName
+		q.files = PathName
 		.new(thisProcess.nowExecutingPath.dirname +/+ "audio")
 		.files
 		.select({ |item,i| item.fileName.toLower.endsWith(".wav")});
-		q.filesRaw.do({ arg item, i; ("  Found " ++ item.fullPath).postln; });
+		q.files.do({ arg item, i; ("  Found " ++ item.fullPath).postln; });
 		"Scrambling files".postln;
-		q.files = q.filesRaw.scramble;
+		q.files = q.files.scramble;
 		q.filesNext = 0;
 
 		q.loadNext = {
@@ -167,8 +167,8 @@ s.waitForBoot({
 		q.ofX = 0;
 		q.ofY = 0;
 		q.ofAngle = 0;
-		q.testA = 0; // amp curve
-		q.testC = 0; // min threshold
+		q.testA = 0.5; // amp curve
+		q.testC = 0.1; // min threshold
 
 		// From Processing
 
@@ -195,8 +195,6 @@ s.waitForBoot({
 		1.wait; // ------------------------- ---------------------------
 
 		fork {
-			q.rhizome.sendMsg("/panel/sc_files",
-PathName.new(q.buffers[q.playingBuf[0]].path).fileName, PathName.new(q.buffers[q.playingBuf[1]].path).fileName);
 			while(
 				{
 					true
@@ -218,6 +216,9 @@ PathName.new(q.buffers[q.playingBuf[0]].path).fileName, PathName.new(q.buffers[q
 								\pan, q.ofAngle.sin
 							]);
 						});
+						// send params to rhizome
+						q.rhizome.sendMsg("/panel/sc_params", q.testA, q.testB, q.testC);
+						q.rhizome.sendMsg("/panel/sc_files", PathName.new(q.buffers[q.playingBuf[0]].path).fileName, PathName.new(q.buffers[q.playingBuf[1]].path).fileName);
 						}, {
 							q.time = 0.0;
 
@@ -225,8 +226,8 @@ PathName.new(q.buffers[q.playingBuf[0]].path).fileName, PathName.new(q.buffers[q
 
 							// start using next two buffers
 							q.playNext.value;
-							q.rhizome.sendMsg("/panel/sc_files", PathName.new(q.buffers[q.playingBuf[0]].path).fileName, PathName.new(q.buffers[q.playingBuf[1]].path).fileName);
 							0.05.wait;
+
 
 							// load files into the two buffers which just became available
 							q.loadNext.value;

@@ -2,10 +2,6 @@ package altsoundtrack;
 
 /**
  *         Config data for the web-based console (rhizome, nexusUI);
- *         This initializes the console to the current settings; 
- *         This is saved after every change by the console
- *         to a javascript file, in JSON format, in the app folder.
- *
  */
 public class ConsoleConfig {
 	// Tweak
