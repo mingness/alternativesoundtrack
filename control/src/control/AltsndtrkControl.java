@@ -4,6 +4,7 @@ import control.ControlConfig;
 import controlP5.CallbackEvent;
 import controlP5.CallbackListener;
 import controlP5.ControlEvent;
+import controlP5.ControlFont;
 import controlP5.ControlListener;
 import controlP5.ControlP5;
 import controlP5.Controller;
@@ -18,6 +19,7 @@ import oscP5.OscP5;
 import java.util.ArrayList;
 import java.util.HashMap;
 import processing.core.PApplet;
+import processing.core.PFont;
 
 
 /**
@@ -54,7 +56,6 @@ public class AltsndtrkControl extends PApplet {
 	private ControlP5 cp5;
 	private ControlConfig cc;
 	CallbackListener cb;
-	private int bgcolor = color(0);
 	
 	// OSC
 	private OscP5 osc;
@@ -63,7 +64,7 @@ public class AltsndtrkControl extends PApplet {
 	private Boolean[] oscLive;
 	private Integer[] oscLastMillis; 
 	private String[] oscStatusControlName; 
-	private int idleThreshold = 1000;
+	private int idleThreshold = 3000;
 	private HashMap<Integer,ArrayList<String>> addressToDropdownListNames 
 		= new HashMap<Integer,ArrayList<String>>(); 
  
@@ -106,19 +107,21 @@ public class AltsndtrkControl extends PApplet {
 		cp5 = new ControlP5(this);
 		int xPos = cc.xStart;
 		int yPos = cc.yStart;
+		PFont pfont = createFont("Lucida Sans",(float) cc.textSize);
+		ControlFont cFont = new ControlFont(pfont, cc.textSize);
 		for (int i=0; i<cc.ctrlNames.size(); i++) {
-			String thisName = cc.ctrlNames.get(i);			
+			String thisName = cc.ctrlNames.get(i);
 			switch (cc.ctrlTypes.get(thisName)) {
 			case STATUS:
 				// three controls: two textlabels, and one textfield
 				cp5.addTextlabel(thisName+"0")
 				.setPosition(xPos, yPos)
-				.setFont(createFont("Lucida Sans",(float) cc.textSize))
+				.setFont(cFont)
 				.setColor(cc.statusColor)
 				.setValue(cc.ctrlLabels.get(thisName));
 				cp5.addTextlabel(thisName)
 				.setPosition(xPos+7*cc.ctrlLabels.get(thisName).length(), yPos)
-				.setFont(createFont("Lucida Sans",(float) cc.textSize))
+				.setFont(cFont)
 				.setColor(cc.statusColor)
 				.setValue("OFF");
 
@@ -128,7 +131,7 @@ public class AltsndtrkControl extends PApplet {
 			case TEXT:  
 				cp5.addTextlabel(thisName)
 				.setPosition(xPos, yPos)
-				.setFont(createFont("Lucida Sans",(float) cc.textSize))
+				.setFont(cFont)
 				.setValue(cc.ctrlLabels.get(thisName));
 				yPos+=cc.textSize+5;
 				break;
@@ -169,14 +172,7 @@ public class AltsndtrkControl extends PApplet {
 			}
 		}
 		surface.setSize(xPos+cc.xStep+cc.xStart, yPos+cc.yGap);
-//		cp5.addListener(new ControlListener() {
-//		public void controlEvent(ControlEvent e) {
-//			Controller<?> c = e.getController();
-//			String name = c.getName();
-//			sendOsc(name, c.getValue());
-//		}
-//	});
-		
+
 		cp5.addCallback(new CallbackListener() {
 			public void controlEvent(CallbackEvent e) {
 //				if (e.getAction() == ControlP5.ACTION_BROADCAST) {
@@ -249,58 +245,58 @@ public class AltsndtrkControl extends PApplet {
 		if (msg.addrPattern().startsWith(cc.listenPathPrefix)) {
 			name = msg.addrPattern().substring(cc.listenPathPrefix.length()+1);
 			if (cc.ctrlNames.contains(name)) {
-				switch (cc.ctrlTypes.get(name)) {
-				case TOGGLE:  
-					boolean val;
-					if (msg.checkTypetag("T")) {
-						val = true;
-					} else if (msg.checkTypetag("F")) {
-						val = false;
-					} else if (msg.checkTypetag("i")) {
-						val = msg.get(0).intValue() == 1;
-					} else if (msg.checkTypetag("f")) {
-						val = msg.get(0).floatValue() == 1;
-					} else if (msg.checkTypetag("d")) {
-						val = msg.get(0).doubleValue() == 1;
-					} else {
-						println("unexpected case for typetag for Toggle.");
-						return;
-					}
-					cp5.get(Toggle.class, name).setValue(val);
-					break;
-				case SLIDER:
-					float valSlider;
-					if (msg.checkTypetag("f")) {
-						valSlider = msg.get(0).floatValue();
-					} else if (msg.checkTypetag("d")) {
-						valSlider = (float) msg.get(0).doubleValue();
-					} else {
-						println("unexpected case for typetag for Slider.");
-						return;
-					}
-					cp5.get(Slider.class, name).setValue(valSlider);
-					break;
-				case DROPDOWN:
-					int valDropdown;
-					if (msg.checkTypetag("i")) {
-						valDropdown = msg.get(0).intValue();
-					} else if (msg.checkTypetag("f")) {
-						valDropdown = round(msg.get(0).floatValue());
-					} else if (msg.checkTypetag("d")) {
-						valDropdown = round((float) msg.get(0).doubleValue());
-					} else {
-						println("unexpected case for typetag for ScrollableList.");
-						return;
-					}
-					if (cc.haveDropdownList.get(name)) {
-						cp5.get(ScrollableList.class, name).setValue(valDropdown);
-					}
-					break;
-				default:
-					println("unexpected case for control type for oscEvent.");
-					break;
-				}	
-			}
+					switch (cc.ctrlTypes.get(name)) {
+					case TOGGLE:  
+						boolean val;
+						if (msg.checkTypetag("T")) {
+							val = true;
+						} else if (msg.checkTypetag("F")) {
+							val = false;
+						} else if (msg.checkTypetag("i")) {
+							val = msg.get(0).intValue() == 1;
+						} else if (msg.checkTypetag("f")) {
+							val = msg.get(0).floatValue() == 1;
+						} else if (msg.checkTypetag("d")) {
+							val = msg.get(0).doubleValue() == 1;
+						} else {
+							println("unexpected case for typetag for Toggle.");
+							return;
+						}
+						cp5.get(Toggle.class, name).setValue(val);
+						break;
+					case SLIDER:
+						float valSlider;
+						if (msg.checkTypetag("f")) {
+							valSlider = msg.get(0).floatValue();
+						} else if (msg.checkTypetag("d")) {
+							valSlider = (float) msg.get(0).doubleValue();
+						} else {
+							println("unexpected case for typetag for Slider.");
+							return;
+						}
+						cp5.get(Slider.class, name).setValue(valSlider);
+						break;
+					case DROPDOWN:
+						int valDropdown;
+						if (msg.checkTypetag("i")) {
+							valDropdown = msg.get(0).intValue();
+						} else if (msg.checkTypetag("f")) {
+							valDropdown = round(msg.get(0).floatValue());
+						} else if (msg.checkTypetag("d")) {
+							valDropdown = round((float) msg.get(0).doubleValue());
+						} else {
+							println("unexpected case for typetag for ScrollableList.");
+							return;
+						}
+						if (cc.haveDropdownList.get(name)) {
+							cp5.get(ScrollableList.class, name).setValue(valDropdown);
+						}
+						break;
+					default:
+						println("unexpected case for control type for oscEvent.");
+						break;
+					} //switch
+			} //if contains
 		} else if (msg.addrPattern().startsWith(cc.configPathPrefix)) {
 			name = msg.addrPattern().substring(cc.configPathPrefix.length()+1);
 			if (cc.oscPathPrefixes.contains("/"+name)) {
@@ -323,5 +319,16 @@ public class AltsndtrkControl extends PApplet {
 		}
 
 	} //end oscEvent
+	
+	public static void main(String[] args) {
+        ArrayList<String> options = new ArrayList<String>();
+        options.add("--bgcolor=#000000 ");
+        options.add("--hide-stop");
+        options.add("control.AltsndtrkControl"); // com.x.Class
+        String[] optionsArray = new String[options.size()];
+        optionsArray = options.toArray(optionsArray);
 
+        PApplet.main(optionsArray);
+    }
+	
 } //end AltsndtrkControl

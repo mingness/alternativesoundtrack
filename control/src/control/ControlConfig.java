@@ -59,21 +59,23 @@ public class ControlConfig extends PApplet {
 	public ControlConfig() {
 		// define OSC addresses
 		//IN
-		this.listenOnPort = 57130;
+		this.listenOnPort = 57130; //is rhizome port on altsndtrk
 		// make sure these prefixes are not a substring of the other
-		this.listenPathPrefix = "/ctrl";
-		this.configPathPrefix = "/conf";
+		this.listenPathPrefix = "/ctrl"; //prefix that altsndtrk sends to broadcast current values for controls
+		this.configPathPrefix = "/conf"; //prefix that altsndtrk sends for configuration
 		//OUT
 		int TOaltsndtrk = 0;
 		int TOsupercollider = 1;
+		this.oscPorts.add(TOaltsndtrk,57140);	//is listenOn port on altsndtrk
+		this.oscPorts.add(TOsupercollider,57120); //is supercollider port on altsndtrk
 		this.oscIps.add(TOaltsndtrk,"127.0.0.1");
 		this.oscIps.add(TOsupercollider,"127.0.0.1");
-		this.oscPorts.add(TOaltsndtrk,57140);
-		this.oscPorts.add(TOsupercollider,57120);
 		// make sure these prefixes are not a substring of the other
 		this.oscPathPrefixes.add(TOaltsndtrk,"/p5");
 		this.oscPathPrefixes.add(TOsupercollider,"/sc");
 				
+		////////////////////////////////////////////////////////////
+		// CONTROL ELEMENTS
 		//order listed is placement of control element from top down
 		this.initElement("status_ast", ControlType.STATUS, "Altsndtrk - ",
 				TOaltsndtrk);
