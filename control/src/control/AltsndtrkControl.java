@@ -45,11 +45,6 @@ import processing.core.PFont;
  * ScrollableLists require in addition to the control value also a list of 
  * possible values that the user choses from. When the remote application 
  * is turned on this list is (re)initialized.
- * 
- * TODO: what is difference between callback listener and control listener
- * event - controls don't always work well
- * broadcast - movies get restarted
- * sometimes things crash
  */
 public class AltsndtrkControl extends PApplet {
 
@@ -67,6 +62,7 @@ public class AltsndtrkControl extends PApplet {
 	private int idleThreshold = 3000;
 	private HashMap<Integer,ArrayList<String>> addressToDropdownListNames 
 		= new HashMap<Integer,ArrayList<String>>(); 
+	private HashMap<String,Boolean> isPress = new HashMap<String,Boolean>(); 
  
 		
 	// In Processing 3 you specify size() inside settings()
@@ -126,6 +122,7 @@ public class AltsndtrkControl extends PApplet {
 				.setValue("OFF");
 
 				oscStatusControlName[cc.ctrlAddresses.get(thisName)] = thisName;
+				isPress.put(thisName, false);
 				yPos+=cc.textSize+5;
 				break;
 			case TEXT:  
@@ -133,6 +130,8 @@ public class AltsndtrkControl extends PApplet {
 				.setPosition(xPos, yPos)
 				.setFont(cFont)
 				.setValue(cc.ctrlLabels.get(thisName));
+
+				isPress.put(thisName, false);
 				yPos+=cc.textSize+5;
 				break;
 			case TOGGLE:  
@@ -140,6 +139,8 @@ public class AltsndtrkControl extends PApplet {
 				.setLabel(cc.ctrlLabels.get(thisName))
 				.setPosition(xPos, yPos)
 				.setValue(false);
+				
+				isPress.put(thisName, false);
 				yPos+=cc.ySize+cc.yGap;
 				break;
 			case SLIDER:
@@ -153,6 +154,8 @@ public class AltsndtrkControl extends PApplet {
 				cp5.addTextlabel(thisName+"0")
 				.setPosition(xPos, yPos)
 				.setValue(cc.ctrlLabels.get(thisName).toUpperCase());
+
+				isPress.put(thisName, false);
 				yPos+=cc.yGap;
 				break;
 			case DROPDOWN:
@@ -161,6 +164,8 @@ public class AltsndtrkControl extends PApplet {
 				.setPosition(xPos, yPos).setSize(cc.xStep,cc.ySizeDropdown)
 				.setBarHeight(cc.ySize).setItemHeight(cc.ySize)
 				.setType(ScrollableList.LIST);
+
+				isPress.put(thisName, false);
 				yPos+=cc.ySizeDropdown+cc.yGap;
 				break;
 			// //////////////////////////////////////
@@ -175,11 +180,18 @@ public class AltsndtrkControl extends PApplet {
 
 		cp5.addCallback(new CallbackListener() {
 			public void controlEvent(CallbackEvent e) {
-//				if (e.getAction() == ControlP5.ACTION_BROADCAST) {
-				if (e.getAction() == ControlP5.EVENT) {
+				if (e.getAction() == ControlP5.ACTION_RELEASE) {
+//				if (e.getAction() == ControlP5.EVENT) {
 					Controller<?> c = e.getController();
 					String name = c.getName();
 					sendOsc(name, c.getValue());
+					isPress.put(name, false);
+					println(name, isPress.get(name));
+				} else if (e.getAction() == ControlP5.ACTION_PRESS) {
+					Controller<?> c = e.getController();
+					String name = c.getName();
+					isPress.put(name, true);
+					println(name, isPress.get(name));
 				}
 			}
 		});
@@ -245,6 +257,7 @@ public class AltsndtrkControl extends PApplet {
 		if (msg.addrPattern().startsWith(cc.listenPathPrefix)) {
 			name = msg.addrPattern().substring(cc.listenPathPrefix.length()+1);
 			if (cc.ctrlNames.contains(name)) {
+				if (!isPress.get(name)) {
 					switch (cc.ctrlTypes.get(name)) {
 					case TOGGLE:  
 						boolean val;
@@ -296,6 +309,7 @@ public class AltsndtrkControl extends PApplet {
 						println("unexpected case for control type for oscEvent.");
 						break;
 					} //switch
+				} //if isPress
 			} //if contains
 		} else if (msg.addrPattern().startsWith(cc.configPathPrefix)) {
 			name = msg.addrPattern().substring(cc.configPathPrefix.length()+1);
