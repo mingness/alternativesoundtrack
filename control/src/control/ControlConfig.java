@@ -46,12 +46,14 @@ public class ControlConfig extends PApplet {
 	ArrayList<String> oscPathPrefixes = new ArrayList<String>();
 
 	//formatting 
+	int xSize = 300;
+	int ySize = 500;
 	int xStart = 20;
 	int yStart = 10;
 	int xStep = 180;
 	int yGap = 20;
-	int ySize = 20;
-	int ySizeDropdown = 100;
+	int yHeight = 20;
+	int yHeightDropdown = 100;
 	int textSize = 14;
 	int bgColor = color(0);
 	int statusColor = color(200);
@@ -80,10 +82,12 @@ public class ControlConfig extends PApplet {
 		this.initElement("status_ast", ControlType.STATUS, "Altsndtrk - ",
 				TOaltsndtrk);
 		// Video source
-//		this.initElement("webcam", ControlType.TOGGLE, "Use Webcam",
-//				TOaltsndtrk);
-//		this.initElement("video_time", ControlType.SLIDER, "Video Time",
-//				TOaltsndtrk);
+		this.initElement("video_source", ControlType.TEXT, "Video Source",
+				TOaltsndtrk);
+		this.initElement("webcam", ControlType.TOGGLE, "Use Webcam",
+				TOaltsndtrk);
+		this.initElement("video_time", ControlType.SLIDER, "Video Time",
+				TOaltsndtrk);
 		this.initElement("movies", ControlType.DROPDOWN, "Select Video",
 				TOaltsndtrk);
 	

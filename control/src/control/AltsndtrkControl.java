@@ -73,12 +73,13 @@ public class AltsndtrkControl extends PApplet {
 
 	@Override
 	public void setup() {
+		cc = new ControlConfig();
+
 		// Window settings
 		surface.setLocation(50, 100);
 		surface.setTitle("AltSndtrk - Control panel");
 		surface.setResizable(true);
-
-		cc = new ControlConfig();
+		surface.setSize(cc.xSize, cc.ySize);
 		background(cc.bgColor);
 
 		// OSC
@@ -141,16 +142,16 @@ public class AltsndtrkControl extends PApplet {
 				.setValue(false);
 				
 				isPress.put(thisName, false);
-				yPos+=cc.ySize+cc.yGap;
+				yPos+=cc.yHeight+cc.yGap;
 				break;
 			case SLIDER:
 				cp5.addSlider(thisName)
 //				.setLabel(cc.ctrlLabels.get(thisName))
 				.setLabel("")
-				.setPosition(xPos, yPos).setSize(cc.xStep,cc.ySize)
+				.setPosition(xPos, yPos).setSize(cc.xStep,cc.yHeight)
 				.setRange(0, 1)
 				.setValue(0.5f);
-				yPos+=cc.ySize+3;
+				yPos+=cc.yHeight+3;
 				cp5.addTextlabel(thisName+"0")
 				.setPosition(xPos, yPos)
 				.setValue(cc.ctrlLabels.get(thisName).toUpperCase());
@@ -161,12 +162,12 @@ public class AltsndtrkControl extends PApplet {
 			case DROPDOWN:
 				cp5.addScrollableList(thisName)
 				.setLabel(cc.ctrlLabels.get(thisName))
-				.setPosition(xPos, yPos).setSize(cc.xStep,cc.ySizeDropdown)
-				.setBarHeight(cc.ySize).setItemHeight(cc.ySize)
+				.setPosition(xPos, yPos).setSize(cc.xStep,cc.yHeightDropdown)
+				.setBarHeight(cc.yHeight).setItemHeight(cc.yHeight)
 				.setType(ScrollableList.LIST);
 
 				isPress.put(thisName, false);
-				yPos+=cc.ySizeDropdown+cc.yGap;
+				yPos+=cc.yHeightDropdown+cc.yGap;
 				break;
 			// //////////////////////////////////////
 			// add additional case treatment for additional control types here	
@@ -176,7 +177,7 @@ public class AltsndtrkControl extends PApplet {
 				break;
 			}
 		}
-		surface.setSize(xPos+cc.xStep+cc.xStart, yPos+cc.yGap);
+
 
 		cp5.addCallback(new CallbackListener() {
 			public void controlEvent(CallbackEvent e) {
@@ -186,12 +187,12 @@ public class AltsndtrkControl extends PApplet {
 					String name = c.getName();
 					sendOsc(name, c.getValue());
 					isPress.put(name, false);
-					println(name, isPress.get(name));
+//					println(name, isPress.get(name));
 				} else if (e.getAction() == ControlP5.ACTION_PRESS) {
 					Controller<?> c = e.getController();
 					String name = c.getName();
 					isPress.put(name, true);
-					println(name, isPress.get(name));
+//					println(name, isPress.get(name));
 				}
 			}
 		});
