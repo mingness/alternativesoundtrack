@@ -9,7 +9,7 @@ package altsoundtrack;
 public class Config {
 	public String moviePath = "movies/";
 	public String dataPath = "data/";
-	public String screenshotPath = "control_panel/pages/screenshot/screenshot.jpg";
+	public String screenshotPath = "../app/control_panel/pages/screenshot/screenshot.jpg";
 	public String bgImageFile = "bgImage.tif";
 	public String maskImageFile = "maskImage.tif";
 

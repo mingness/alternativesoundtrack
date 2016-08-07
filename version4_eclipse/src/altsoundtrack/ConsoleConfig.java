@@ -12,4 +12,6 @@ public class ConsoleConfig {
 	public double videoTime = 0.5; 
 	// Mask
 	public boolean enableMask = false;
+	// video
+	public String[] movieList;
 }

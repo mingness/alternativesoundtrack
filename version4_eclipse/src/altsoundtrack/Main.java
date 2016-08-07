@@ -10,7 +10,10 @@ import altsoundtrack.video.AltMovieWebcam;
 import altsoundtrack.video.BgSubtract;
 import altsoundtrack.video.Mask;
 import analysis.BaseAnalysis;
+import analysis.BlobAnalysis;
+import analysis.HistogramAnalysis;
 import analysis.OpticalFlowAnalysis;
+import analysis.SequencerAnalysis;
 import netP5.NetAddress;
 import oscP5.OscMessage;
 import oscP5.OscP5;
@@ -32,39 +35,36 @@ public class Main extends PApplet {
 	// Config
 	private Config cfg;
 	private ConfigManager cfgManager;
-	private ConsoleConfig console;
 
 	// Video
 	private AltMovie video;
 	private boolean useWebcam;
 	private File[] movies;
-	private final int whichMovie = 0;
+	private int whichMovie = 0;
 	private final boolean bgsubDefault = false;
 	private BgSubtract bgsub;
 	private Mask mask;
 	private boolean display_enabled = true;
 
-	private boolean webcamChanged = false;
-	private boolean whichMovieChanged = false;
-
 	// Analyses
 	ArrayList<BaseAnalysis> analyses = new ArrayList<BaseAnalysis>();
 
+	// Control
+	private ConsoleConfig console;
 	// Commands are used because OSC messages arrive in a different thread,
 	// which is not allowed to draw on the screen. So instead of drawing
 	// immediately, we store the command, and use it later inside the main
 	// graphics thread (draw loop).
-	private final static int CMD_NONE = 0;
-	private final static int CMD_SCREENSHOT = 1;
-	private final static int CMD_SET_BGSUB = 2;
-	private final static int CMD_CLEAR_MASK = 3;
-	private final static int CMD_ADD_MASK_POINT = 4;
-	private static int CMD = CMD_NONE;
+	private boolean webcamChanged = false;
+	private boolean whichMovieChanged = false;
+	private boolean takeScreenshot = false;
+	private boolean setBg = false;
+	private boolean sendMovieList = false;
 
 	// In Processing 3 you specify size() inside settings()
 	@Override
 	public void settings() {
-		size(960, 540);
+		size(640, 480);
 		// fullScreen(P2D);
 	}
 
@@ -114,6 +114,13 @@ public class Main extends PApplet {
 		File path = new File(cfg.moviePath);
 		if (path.isDirectory()) {
 			movies = path.listFiles();
+			if (movies != null) {
+				String[] ll = new String[movies.length];
+				for (int i = 0; i < movies.length; i++) {
+					ll[i] = movies[i].getName();
+				}
+				console.movieList = ll;
+			}
 		}
 		if (useWebcam) {
 			video = new AltMovieWebcam(this);
@@ -127,11 +134,10 @@ public class Main extends PApplet {
 		}
 	}
 
-	private void update() {
+	private void updateVideoSource() {
 		if (whichMovieChanged) {
 			if (useWebcam) {
 				useWebcam = false;
-				// cf.setWebcam(useWebcam);
 				video.stop();
 				video = new AltMovieFile(this);
 			} else {
@@ -164,54 +170,64 @@ public class Main extends PApplet {
 		}
 	}
 
-	private void processCommand() {
-		switch (CMD) {
-			case CMD_NONE:
-				return;
-			case CMD_SCREENSHOT:
-				String fname = cfg.screenshotPath;
-				save(fname);
-				sendOsc("/panel/screenshot", 1, rhizome);
-				break;
-			case CMD_CLEAR_MASK:
-				mask.clear();
-				break;
-			case CMD_ADD_MASK_POINT:
-				mask.drawDot();
-				break;
-			case CMD_SET_BGSUB:
-				bgsub.save(video.getImg());
-				break;
-		}
-		CMD = CMD_NONE;
-	}
-
-	@Override
-	public void draw() {
-		processCommand();
-		update();
-
-		// Update panel only every 10 frames to reduce network traffic.
-		if (!useWebcam && frameCount % 10 == 0) {
+	private void rebroadcastConsoleState() {
+		if (!useWebcam) {
 			sendOsc("/panel/video_time", video.currPos(), rhizome);
 		}
-		
-		if (frameCount % 10 == 0) {
-			OscMessage msg = new OscMessage("/panel/pr_params");
-			msg.add(console.displayEnabled ? 1 : 0);
-			msg.add(console.enableBGSub ? 1 : 0);
-			msg.add(console.opticalFlowReg);
-			msg.add(console.opticalFlowSm);
-			msg.add(console.videoTime);
-			msg.add(console.enableMask ? 1 : 0);
-			osc.send(msg, rhizome);
-		}
+		OscMessage msg = new OscMessage("/panel/pr_params");
+		msg.add(console.displayEnabled ? 1 : 0);
+		msg.add(console.enableBGSub ? 1 : 0);
+		msg.add(console.opticalFlowReg);
+		msg.add(console.opticalFlowSm);
+		msg.add(console.videoTime);
+		msg.add(console.enableMask ? 1 : 0);
+		osc.send(msg, rhizome);
 
+		sendOsc("/conf/p5", 1, rhizome);
+		sendOsc("/ctrl/webcam", useWebcam, rhizome);
+		sendOsc("/ctrl/movies", whichMovie, rhizome);
+		sendOsc("/ctrl/video_time", console.videoTime, rhizome);
+		sendOsc("/ctrl/a_of", analyses.get(0).isEnabled(), rhizome);
+		sendOsc("/ctrl/bgsub", console.enableBGSub, rhizome);
+		sendOsc("/ctrl/of_regression",console.opticalFlowReg, rhizome);
+		sendOsc("/ctrl/of_smoothness",console.opticalFlowSm, rhizome);
+	}
+	
+	@Override
+	public void draw() {
 		if (!video.available()) {
 			return;
 		}
+		
+		PImage v = video.getImg().copy();
+		updateVideoSource();
 
-		PImage v = video.getImg();
+		if (sendMovieList) {
+			OscMessage msg = new OscMessage("/conf/movies");
+			for (int i = 0; i < console.movieList.length; i++) {
+				msg.add(console.movieList[i]);
+			}
+			osc.send(msg, rhizome);
+			sendMovieList = false;
+		}
+
+		if (takeScreenshot) {
+			String fname = cfg.screenshotPath;
+			v.save(fname);
+			sendOsc("/panel/screenshot", 1, rhizome);
+			takeScreenshot = false;
+		}
+		// rebroadcast console state
+		// Update panel only every 10 frames to reduce network traffic.
+		if (frameCount % 10 == 0) {
+			rebroadcastConsoleState();
+			console.videoTime = video.currPos();
+		}
+
+		if (setBg) {
+			bgsub.save(v);		
+			setBg = false;
+		}
 		if (bgsub.isEnabled()) {
 			bgsub.process(v);
 		}
@@ -261,6 +277,16 @@ public class Main extends PApplet {
 		msg.add(val);
 		osc.send(msg, to);
 	}
+	private void sendOsc(String path, boolean val, NetAddress to) {
+		OscMessage msg = new OscMessage(path);
+		msg.add(val);
+		osc.send(msg, to);
+	}
+	private void sendOsc(String path, double val, NetAddress to) {
+		OscMessage msg = new OscMessage(path);
+		msg.add(val);
+		osc.send(msg, to);
+	}
 
 	// It's good to implement an OscEventListener.
 	// It's a bit more verbose than oscEvent(), but
@@ -269,6 +295,7 @@ public class Main extends PApplet {
 	// and we have no clue of knowing what's going
 	// wrong.
 	public void oscEvent(OscMessage msg) {
+		println(msg.toString());
 		float val = 0;
 		if (msg.checkTypetag("f")) {
 			val = msg.get(0).floatValue();
@@ -298,17 +325,17 @@ public class Main extends PApplet {
 				console.enableMask = mask.isEnabled();
 				break;
 			case "/p5/clear_mask":
-				CMD = CMD_CLEAR_MASK;
+				mask.clear();
 				break;
 			case "/p5/add_mask_point":
 				mask.setClick(msg.get(0).floatValue(), msg.get(1).floatValue());
-				CMD = CMD_ADD_MASK_POINT;
+				mask.drawDot();
 				break;
 			case "/p5/set_bg":
-				CMD = CMD_SET_BGSUB;
+				setBg = true;
 				break;
 			case "/p5/screenshot":
-				CMD = CMD_SCREENSHOT;
+				takeScreenshot = true;
 				break;
 			case "/p5/display_enabled":
 				display_enabled = val > 0.5;
@@ -325,6 +352,17 @@ public class Main extends PApplet {
 			case "/p5/video_time":
 				video.setPos(val);
 				console.videoTime = val;
+				break;
+			case "/p5/webcam":
+				useWebcam = val == 1;
+				webcamChanged = true;
+				break;
+			case "/p5/movies":
+				whichMovie = round(val);
+				whichMovieChanged = true;
+				break;
+			case "/conf/movies":
+				sendMovieList = true;
 				break;
 			default:
 				println("unexpected message received: " + msg);
