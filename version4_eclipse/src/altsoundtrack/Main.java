@@ -188,12 +188,13 @@ public class Main extends PApplet {
 	
 	@Override
 	public void draw() {
+		updateVideoSource();
+
 		if (!video.available()) {
 			return;
 		}
 		
 		PImage v = video.getImg().copy();
-		updateVideoSource();
 
 		if (sendMovieList) {
 			OscMessage msg = new OscMessage("/conf/movies");
@@ -247,6 +248,7 @@ public class Main extends PApplet {
 					sendOsc(analysis.getOSCmsg(), supercollider);
 				}
 			} else {
+				println(v.width,v.height);
 				analysis.initialize(v.width, v.height, video.getFrameRate());
 			}
 		}
