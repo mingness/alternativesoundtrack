@@ -171,26 +171,16 @@ public class Main extends PApplet {
 	}
 
 	private void rebroadcastConsoleState() {
-		if (!useWebcam) {
-			sendOsc("/panel/video_time", video.currPos(), rhizome);
-		}
-		OscMessage msg = new OscMessage("/panel/pr_params");
-		msg.add(console.displayEnabled ? 1 : 0);
-		msg.add(console.enableBGSub ? 1 : 0);
-		msg.add(console.opticalFlowReg);
-		msg.add(console.opticalFlowSm);
-		msg.add(console.videoTime);
-		msg.add(console.enableMask ? 1 : 0);
-		osc.send(msg, rhizome);
-
-		sendOsc("/conf/p5", 1, rhizome);
-		sendOsc("/ctrl/webcam", useWebcam, rhizome);
-		sendOsc("/ctrl/movies", whichMovie, rhizome);
-		sendOsc("/ctrl/video_time", console.videoTime, rhizome);
-		sendOsc("/ctrl/a_of", analyses.get(0).isEnabled(), rhizome);
-		sendOsc("/ctrl/bgsub", console.enableBGSub, rhizome);
-		sendOsc("/ctrl/of_regression",console.opticalFlowReg, rhizome);
-		sendOsc("/ctrl/of_smoothness",console.opticalFlowSm, rhizome);
+		sendOsc("/panel/p5", 1, rhizome);
+		sendOsc("/panel/webcam", useWebcam ? 1 : 0, rhizome);
+		sendOsc("/panel/movies", whichMovie, rhizome);
+		sendOsc("/panel/video_time", console.video_time, rhizome);
+		sendOsc("/panel/display_enabled", console.display_enabled ? 1 : 0, rhizome);
+		sendOsc("/panel/mask_enabled", console.mask_enabled ? 1 : 0, rhizome);
+		sendOsc("/panel/a_of", analyses.get(0).isEnabled() ? 1 : 0, rhizome);
+		sendOsc("/panel/bgsub", console.bgsub ? 1 : 0, rhizome);
+		sendOsc("/panel/of_regression",console.of_regression, rhizome);
+		sendOsc("/panel/of_smoothness",console.of_smoothness, rhizome);
 	}
 	
 	@Override
@@ -221,7 +211,7 @@ public class Main extends PApplet {
 		// Update panel only every 10 frames to reduce network traffic.
 		if (frameCount % 10 == 0) {
 			rebroadcastConsoleState();
-			console.videoTime = video.currPos();
+			console.video_time = video.currPos();
 		}
 
 		if (setBg) {
@@ -318,11 +308,11 @@ public class Main extends PApplet {
 				break;
 			case "/p5/bgsub":
 				bgsub.setEnabled(val > 0.5);
-				console.enableBGSub = bgsub.isEnabled();
+				console.bgsub = bgsub.isEnabled();
 				break;
 			case "/p5/mask_enabled":
 				mask.setEnabled(val > 0.5);
-				console.enableMask = mask.isEnabled();
+				console.mask_enabled = mask.isEnabled();
 				break;
 			case "/p5/clear_mask":
 				mask.clear();
@@ -339,19 +329,19 @@ public class Main extends PApplet {
 				break;
 			case "/p5/display_enabled":
 				display_enabled = val > 0.5;
-				console.displayEnabled = display_enabled;
+				console.display_enabled = display_enabled;
 				break;
 			case "/p5/of_regression":
 				analyses.get(0).setParams(0, val);
-				console.opticalFlowReg = val;
+				console.of_regression = val;
 				break;
 			case "/p5/of_smoothness":
 				analyses.get(0).setParams(1, val);
-				console.opticalFlowSm = val;
+				console.of_smoothness = val;
 				break;
 			case "/p5/video_time":
 				video.setPos(val);
-				console.videoTime = val;
+				console.video_time = val;
 				break;
 			case "/p5/webcam":
 				useWebcam = val == 1;

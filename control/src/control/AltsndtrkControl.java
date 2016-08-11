@@ -257,7 +257,10 @@ public class AltsndtrkControl extends PApplet {
 		String name;
 		if (msg.addrPattern().startsWith(cc.listenPathPrefix)) {
 			name = msg.addrPattern().substring(cc.listenPathPrefix.length()+1);
-			if (cc.ctrlNames.contains(name)) {
+			if (cc.oscPathPrefixes.contains("/"+name)) {
+//				println(name,oscLastMillis[cc.oscPathPrefixes.indexOf("/"+name)],millis());
+				oscLastMillis[cc.oscPathPrefixes.indexOf("/"+name)] = millis();
+			} else if (cc.ctrlNames.contains(name)) {
 				if (!isPress.get(name)) {
 					switch (cc.ctrlTypes.get(name)) {
 					case TOGGLE:  
@@ -314,10 +317,7 @@ public class AltsndtrkControl extends PApplet {
 			} //if contains
 		} else if (msg.addrPattern().startsWith(cc.configPathPrefix)) {
 			name = msg.addrPattern().substring(cc.configPathPrefix.length()+1);
-			if (cc.oscPathPrefixes.contains("/"+name)) {
-//				println(name,oscLastMillis[cc.oscPathPrefixes.indexOf("/"+name)],millis());
-				oscLastMillis[cc.oscPathPrefixes.indexOf("/"+name)] = millis();
-			} else if (cc.dropdownNames.contains(name)) {		
+			if (cc.dropdownNames.contains(name)) {		
 				String[] ll = new String[msg.addrPattern().length()];
 				for (int i=0; i<msg.addrPattern().length(); i++) {
 					ll[i] = msg.get(i).stringValue();	

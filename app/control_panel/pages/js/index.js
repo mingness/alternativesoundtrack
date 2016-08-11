@@ -26,7 +26,7 @@ var maskCanvas, maskContext, screenshot;
 var prPingTime, scPingTime = new Date().getTime();
 
 function send_pr_state() {
-  if ((new Date().getTime() - prPingTime) < 1000) { 
+  if ((new Date().getTime() - prPingTime) < 3000) { 
     $('#pr_on').text("Running");
   } else {
     $('#pr_on').text("OFF");
@@ -54,6 +54,9 @@ $(function() {
   });
 
   rhizome.on('message', function(address, args) {
+    if(address === '/panel/p5') {
+      prPingTime = new Date().getTime();
+    }
     if(address === '/panel/video_time') {
       var w = nx.widgets["/p5/video_time"];
       w.val.value = args[0];
@@ -68,20 +71,27 @@ $(function() {
         screenshot.src = 'screenshot/screenshot.jpg?' + Math.random();
       }, 200);
     }
-    if(address === '/panel/pr_params') {
-     prPingTime = new Date().getTime();
-     // set values for tweak
-     nx.widgets['/p5/display_enabled'].set({value: args[0]});
-     nx.widgets['/p5/bgsub'].set({value: args[1]});
-     nx.widgets['/p5/of_regression'].set({value: args[2]});
-     nx.widgets['/p5/of_smoothness'].set({value: args[3]});
-     nx.widgets['/p5/video_time'].set({value: args[4]});
-     // set mask
-     nx.widgets['/p5/mask_enabled'].set({value: args[5]});
-   }
+    if(address === '/panel/a_of') {
+      nx.widgets['/p5/a_of'].set({value: args[0]});
+    }
+    if(address === '/panel/bgsub') {
+      nx.widgets['/p5/bgsub'].set({value: args[0]});
+    }
+    if(address === '/panel/of_regression') {
+      nx.widgets['/p5/of_regression'].set({value: args[0]});
+    }
+    if(address === '/panel/of_smoothness') {
+      nx.widgets['/p5/of_smoothness'].set({value: args[0]});
+    }
+    if(address === '/panel/mask_enabled') {
+      nx.widgets['/p5/mask_enabled'].set({value: args[0]});
+    }
+    if(address === '/panel/display_enabled') {
+      nx.widgets['/p5/display_enabled'].set({value: args[0]});
+    }
     if(address === '/panel/sc_files') {
-     $('#soundFile1').text(args[0]);
-     $('#soundFile2').text(args[1]);
+      $('#soundFile1').text(args[0]);
+      $('#soundFile2').text(args[1]);
     }
     if(address === '/panel/sc_params') {
       scPingTime = new Date().getTime();

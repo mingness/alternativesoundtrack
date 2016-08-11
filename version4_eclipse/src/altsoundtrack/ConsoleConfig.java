@@ -5,13 +5,13 @@ package altsoundtrack;
  */
 public class ConsoleConfig {
 	// Tweak
-	public boolean displayEnabled = true;
-	public boolean enableBGSub = false;
-	public double opticalFlowReg = 0.5; 
-	public double opticalFlowSm = 0.5; 
-	public double videoTime = 0.5; 
+	public boolean display_enabled = true;
+	public boolean bgsub = false;
+	public double of_regression = 0.5; 
+	public double of_smoothness = 0.5; 
+	public double video_time = 0.5; 
 	// Mask
-	public boolean enableMask = false;
+	public boolean mask_enabled = false;
 	// video
 	public String[] movieList;
 }

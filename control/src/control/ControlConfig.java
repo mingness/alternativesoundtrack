@@ -47,7 +47,7 @@ public class ControlConfig extends PApplet {
 
 	//formatting 
 	int xSize = 300;
-	int ySize = 500;
+	int ySize = 600;
 	int xStart = 20;
 	int yStart = 10;
 	int xStep = 180;
@@ -63,7 +63,7 @@ public class ControlConfig extends PApplet {
 		//IN
 		this.listenOnPort = 57130; //is rhizome port on altsndtrk
 		// make sure these prefixes are not a substring of the other
-		this.listenPathPrefix = "/ctrl"; //prefix that altsndtrk sends to broadcast current values for controls
+		this.listenPathPrefix = "/panel"; //prefix that altsndtrk sends to broadcast current values for controls
 		this.configPathPrefix = "/conf"; //prefix that altsndtrk sends for configuration
 		//OUT
 		int TOaltsndtrk = 0;
