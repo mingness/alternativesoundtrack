@@ -103,11 +103,11 @@ public class Main extends PApplet {
 
 		mask = new Mask(this, false);
 
-		// analyses.add(new HistogramAnalysis(this));
-		// analyses.add(new FrameDiffAnalysis(this));
 		analyses.add(new OpticalFlowAnalysis(this));
-		// analyses.add(new SequencerAnalysis(this));
-		// analyses.add(new BlobAnalysis(this));
+		analyses.add(new HistogramAnalysis(this));
+		// analyses.add(new FrameDiffAnalysis(this));
+		analyses.add(new SequencerAnalysis(this));
+		analyses.add(new BlobAnalysis(this));
 
 		frameRate(cfg.frameRate);
 
@@ -178,6 +178,9 @@ public class Main extends PApplet {
 		sendOsc("/panel/display_enabled", console.display_enabled ? 1 : 0, rhizome);
 		sendOsc("/panel/mask_enabled", console.mask_enabled ? 1 : 0, rhizome);
 		sendOsc("/panel/a_of", analyses.get(0).isEnabled() ? 1 : 0, rhizome);
+		sendOsc("/panel/a_hist", analyses.get(1).isEnabled() ? 1 : 0, rhizome);
+		sendOsc("/panel/a_seq", analyses.get(2).isEnabled() ? 1 : 0, rhizome);
+		sendOsc("/panel/a_blob", analyses.get(3).isEnabled() ? 1 : 0, rhizome);
 		sendOsc("/panel/bgsub", console.bgsub ? 1 : 0, rhizome);
 		sendOsc("/panel/of_regression",console.of_regression, rhizome);
 		sendOsc("/panel/of_smoothness",console.of_smoothness, rhizome);

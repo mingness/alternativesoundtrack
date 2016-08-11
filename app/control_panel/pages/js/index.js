@@ -74,6 +74,15 @@ $(function() {
     if(address === '/panel/a_of') {
       nx.widgets['/p5/a_of'].set({value: args[0]});
     }
+    if(address === '/panel/a_hist') {
+      nx.widgets['/p5/a_hist'].set({value: args[0]});
+    }
+    if(address === '/panel/a_seq') {
+      nx.widgets['/p5/a_seq'].set({value: args[0]});
+    }
+    if(address === '/panel/a_blob') {
+      nx.widgets['/p5/a_blob'].set({value: args[0]});
+    }
     if(address === '/panel/bgsub') {
       nx.widgets['/p5/bgsub'].set({value: args[0]});
     }
