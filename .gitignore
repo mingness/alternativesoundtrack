@@ -1,3 +1,6 @@
 altSoundtrackConfig.json
 *.mp4
 
+nohup.out
+app/control_panel/pages/screenshot/
+/target/

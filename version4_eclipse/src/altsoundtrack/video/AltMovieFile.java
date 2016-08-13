@@ -20,8 +20,8 @@ public class AltMovieFile extends AltMovie {
 	}
 
 	@Override
-	public void play(Object path) {
-		File f = new File((String) path);
+	public void play(Object... args) {
+		File f = new File((String) args[0]);
 
 		v = new Movie(p5, f.getAbsolutePath());
 		v.loop();
@@ -66,6 +66,6 @@ public class AltMovieFile extends AltMovie {
 
 	@Override
 	public void setPos(float mLocation) {
-		v.jump(mLocation*v.duration());
+		v.jump(mLocation * v.duration());
 	}
 }

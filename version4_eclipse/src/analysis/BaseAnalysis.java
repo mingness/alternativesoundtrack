@@ -37,8 +37,11 @@ public class BaseAnalysis {
 		return enabled;
 	}
 
-	public void toggleEnabled() {
-		enabled = !enabled;
+	public void setEnabled(boolean e) {
+		enabled = e;
+	}
+
+	public void setParams(int id, float val) {
 	}
 
 	public void initialize(int w, int h, int fps) {

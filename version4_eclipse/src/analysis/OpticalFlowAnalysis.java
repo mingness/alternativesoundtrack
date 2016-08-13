@@ -13,16 +13,20 @@ import processing.core.PImage;
 public class OpticalFlowAnalysis extends BaseAnalysis {
 	// This setting greatly affects the result
 	// More is less cpu intensive
-	private final int GRID_SIZE_PX = 30;
-
-	private float predictionTimeSec;
+	private final int GRID_SIZE_PX = 15;
 
 	private int[] imgPixels;
+
+	private int longestVectorId;
+	private float longestVectorLength;
 
 	// grid parameters
 	private int avgWindowSize; // -avgWindowSize .. +avgWindowSize
 	private int columnCount, rowCount;
 	private int gridStepPx2;
+
+	// just for drawing the vectors
+	private float predictionTimeSec;
 	private float predictionFrames;
 
 	// regression vectors
@@ -30,11 +34,11 @@ public class OpticalFlowAnalysis extends BaseAnalysis {
 	private int vectorCount;
 
 	// regularization term for regression
-	private final float fc = (float) Math.pow(10, 8); // larger values for noisy
-														// video
+	private float fc = (float) Math.pow(10, 8); // larger values for noisy
+												// video
 
 	// smoothing parameters
-	private final float smoothness = 0.2f; // smaller value for longer smoothing
+	private float smoothness = 0.2f; // smaller value for longer smoothing
 
 	// internally used variables
 	private float ar, ag, ab; // used as return value of pixave
@@ -173,6 +177,19 @@ public class OpticalFlowAnalysis extends BaseAnalysis {
 				sflowy[ig] += (flowy[ig] - sflowy[ig]) * smoothness;
 			}
 		}
+		longestVectorLength = 0;
+		int itemCount = columnCount * rowCount;
+		// find longest vector
+		for (int i = 0; i < itemCount; i++) {
+			float u = sflowx[i];
+			float v = sflowy[i];
+			float newlen = u * u + v * v;
+			if (newlen > longestVectorLength) {
+				longestVectorLength = newlen;
+				longestVectorId = i;
+			}
+		}
+
 	}
 
 	// calculate average pixel value (r,g,b) for rectangle region
@@ -200,7 +217,7 @@ public class OpticalFlowAnalysis extends BaseAnalysis {
 			for (int i = width * y + x1; i <= width * y + x2; i++) {
 				pix = imgPixels[i];
 				b = pix & 0xFF; // blue
-				pix = pix >> 8;
+				pix = pix >>= 8;
 				g = pix & 0xFF; // green
 				pix = pix >> 8;
 				r = pix & 0xFF; // red
@@ -233,7 +250,6 @@ public class OpticalFlowAnalysis extends BaseAnalysis {
 	// solve optical flow by least squares (regression analysis)
 	private void solveflow(int ig) {
 		float xx, xy, yy, xt, yt;
-		float a, u, v;
 
 		// prepare covariances
 		xx = xy = yy = xt = yt = 0.0f;
@@ -246,15 +262,26 @@ public class OpticalFlowAnalysis extends BaseAnalysis {
 		}
 
 		// least squares computation
-		a = xx * yy - xy * xy + fc; // fc is for stable computation
-		u = yy * xt - xy * yt; // x direction
-		v = xx * yt - xy * xt; // y direction
+		final float a = xx * yy - xy * xy + fc; // fc is for stable computation
+		final float u = yy * xt - xy * yt; // x direction
+		final float v = xx * yt - xy * xt; // y direction
 
 		// write back
-		flowx[ig] = -2 * GRID_SIZE_PX * u / a; // optical flow x (pixel per
-												// frame)
-		flowy[ig] = -2 * GRID_SIZE_PX * v / a; // optical flow y (pixel per
-												// frame)
+		final float n = -2 * GRID_SIZE_PX / a;
+		flowx[ig] = n * u; // optical flow x (pixel per frame)
+		flowy[ig] = n * v; // optical flow y (pixel per frame)
+	}
+
+	@Override
+	public void setParams(int id, float val) {
+		switch (id) {
+			case 0:
+				fc = (float) Math.pow(10, 1 + val * 8);
+				break;
+			case 1:
+				smoothness = val;
+				break;
+		}
 	}
 
 	/**
@@ -271,6 +298,7 @@ public class OpticalFlowAnalysis extends BaseAnalysis {
 
 			float len = u * u + v * v; // avoid sqrt for better performance
 			if (len >= 5 * 5) {
+				p5.strokeWeight(i == longestVectorId ? 4 : 1);
 				p5.stroke(0, 255, 0);
 				float x = kx * ((i % columnCount) * GRID_SIZE_PX + gridStepPx2);
 				float y = ky * ((i / columnCount) * GRID_SIZE_PX + gridStepPx2);
@@ -287,24 +315,15 @@ public class OpticalFlowAnalysis extends BaseAnalysis {
 	 */
 	@Override
 	public OscMessage getOSCmsg() {
-		float maxLen = 0;
-		int index = 0;
-		int itemCount = columnCount * rowCount;
-		for (int i = 0; i < itemCount; i++) {
-			float u = sflowx[i];
-			float v = sflowy[i];
-			float newlen = u * u + v * v;
-			if (newlen > maxLen) {
-				maxLen = newlen;
-				index = i;
-			}
-		}
 		// send longest vector info
 		OscMessage msg = new OscMessage("/of");
-		msg.add((float) Math.sqrt(maxLen)); // len NOT normalized
-		msg.add((float) Math.atan2(sflowy[index], sflowx[index])); // angle rad
-		msg.add((index % columnCount) / (float) columnCount); // x normalized
-		msg.add((index / columnCount) / (float) rowCount); // y normalized
+		msg.add((float) Math.sqrt(longestVectorLength)); // len NOT normalized
+		msg.add((float) Math.atan2(sflowy[longestVectorId],
+				sflowx[longestVectorId])); // angle rad
+		msg.add((longestVectorId % columnCount) / (float) columnCount); // x
+																		// normalized
+		msg.add((longestVectorId / columnCount) / (float) rowCount); // y
+																		// normalized
 		return msg;
 	}
 }

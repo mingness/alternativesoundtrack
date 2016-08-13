@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project default="create_run_jar" name="Create Runnable Jar for Project altsoundtrack with libraries in sub-folder">
+    <!--this file was created by Eclipse Runnable JAR Export Wizard-->
+    <!--ANT 1.7 is required                                        -->
+    <!--define folder properties-->
+    <property name="dir.buildfile" value="."/>
+    <property name="dir.workspace" value="/home/funpro/workspace"/>
+    <property name="dir.jarfile" value="/home/funpro/Desktop/work/2015_altsoundtrack/alternativesoundtrack/app"/>
+    <target name="create_run_jar">
+        <jar destfile="${dir.jarfile}/AltSoundtrack.jar">
+            <manifest>
+                <attribute name="Main-Class" value="altsoundtrack.Main"/>
+                <attribute name="Class-Path" value=". AltSoundtrack_lib/core.jar AltSoundtrack_lib/gluegen-rt-natives-linux-amd64.jar AltSoundtrack_lib/gluegen-rt-natives-linux-armv6hf.jar AltSoundtrack_lib/gluegen-rt-natives-linux-i586.jar AltSoundtrack_lib/gluegen-rt-natives-macosx-universal.jar AltSoundtrack_lib/gluegen-rt-natives-windows-amd64.jar AltSoundtrack_lib/gluegen-rt-natives-windows-i586.jar AltSoundtrack_lib/gluegen-rt.jar AltSoundtrack_lib/jogl-all-natives-linux-amd64.jar AltSoundtrack_lib/jogl-all-natives-linux-armv6hf.jar AltSoundtrack_lib/jogl-all-natives-linux-i586.jar AltSoundtrack_lib/jogl-all-natives-macosx-universal.jar AltSoundtrack_lib/jogl-all-natives-windows-amd64.jar AltSoundtrack_lib/jogl-all-natives-windows-i586.jar AltSoundtrack_lib/jogl-all.jar AltSoundtrack_lib/oscP5.jar AltSoundtrack_lib/gstreamer-java.jar AltSoundtrack_lib/jna.jar AltSoundtrack_lib/video.jar AltSoundtrack_lib/controlP5.jar AltSoundtrack_lib/blobDetection.jar AltSoundtrack_lib/json-io-4.2.1.jar"/>
+            </manifest>
+            <fileset dir="${dir.buildfile}/target/classes"/>
+        </jar>
+        <delete dir="${dir.jarfile}/AltSoundtrack_lib"/>
+        <mkdir dir="${dir.jarfile}/AltSoundtrack_lib"/>
+        <copy file="${dir.buildfile}/lib/core.jar" todir="${dir.jarfile}/AltSoundtrack_lib"/>
+        <copy file="${dir.buildfile}/lib/gluegen-rt-natives-linux-amd64.jar" todir="${dir.jarfile}/AltSoundtrack_lib"/>
+        <copy file="${dir.buildfile}/lib/gluegen-rt-natives-linux-armv6hf.jar" todir="${dir.jarfile}/AltSoundtrack_lib"/>
+        <copy file="${dir.buildfile}/lib/gluegen-rt-natives-linux-i586.jar" todir="${dir.jarfile}/AltSoundtrack_lib"/>
+        <copy file="${dir.buildfile}/lib/gluegen-rt-natives-macosx-universal.jar" todir="${dir.jarfile}/AltSoundtrack_lib"/>
+        <copy file="${dir.buildfile}/lib/gluegen-rt-natives-windows-amd64.jar" todir="${dir.jarfile}/AltSoundtrack_lib"/>
+        <copy file="${dir.buildfile}/lib/gluegen-rt-natives-windows-i586.jar" todir="${dir.jarfile}/AltSoundtrack_lib"/>
+        <copy file="${dir.buildfile}/lib/gluegen-rt.jar" todir="${dir.jarfile}/AltSoundtrack_lib"/>
+        <copy file="${dir.buildfile}/lib/jogl-all-natives-linux-amd64.jar" todir="${dir.jarfile}/AltSoundtrack_lib"/>
+        <copy file="${dir.buildfile}/lib/jogl-all-natives-linux-armv6hf.jar" todir="${dir.jarfile}/AltSoundtrack_lib"/>
+        <copy file="${dir.buildfile}/lib/jogl-all-natives-linux-i586.jar" todir="${dir.jarfile}/AltSoundtrack_lib"/>
+        <copy file="${dir.buildfile}/lib/jogl-all-natives-macosx-universal.jar" todir="${dir.jarfile}/AltSoundtrack_lib"/>
+        <copy file="${dir.buildfile}/lib/jogl-all-natives-windows-amd64.jar" todir="${dir.jarfile}/AltSoundtrack_lib"/>
+        <copy file="${dir.buildfile}/lib/jogl-all-natives-windows-i586.jar" todir="${dir.jarfile}/AltSoundtrack_lib"/>
+        <copy file="${dir.buildfile}/lib/jogl-all.jar" todir="${dir.jarfile}/AltSoundtrack_lib"/>
+        <copy file="${dir.buildfile}/lib/oscP5.jar" todir="${dir.jarfile}/AltSoundtrack_lib"/>
+        <copy file="${dir.buildfile}/lib/gstreamer-java.jar" todir="${dir.jarfile}/AltSoundtrack_lib"/>
+        <copy file="${dir.buildfile}/lib/jna.jar" todir="${dir.jarfile}/AltSoundtrack_lib"/>
+        <copy file="${dir.buildfile}/lib/video.jar" todir="${dir.jarfile}/AltSoundtrack_lib"/>
+        <copy file="${dir.buildfile}/lib/controlP5.jar" todir="${dir.jarfile}/AltSoundtrack_lib"/>
+        <copy file="${dir.buildfile}/lib/blobDetection.jar" todir="${dir.jarfile}/AltSoundtrack_lib"/>
+        <copy file="/home/funpro/.m2/repository/com/cedarsoftware/json-io/4.2.1/json-io-4.2.1.jar" todir="${dir.jarfile}/AltSoundtrack_lib"/>
+    </target>
+</project>

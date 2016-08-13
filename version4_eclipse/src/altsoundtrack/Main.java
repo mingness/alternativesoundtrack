@@ -1,7 +1,6 @@
 package altsoundtrack;
 
 import java.io.File;
-import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 
@@ -9,15 +8,12 @@ import altsoundtrack.video.AltMovie;
 import altsoundtrack.video.AltMovieFile;
 import altsoundtrack.video.AltMovieWebcam;
 import altsoundtrack.video.BgSubtract;
+import altsoundtrack.video.Mask;
 import analysis.BaseAnalysis;
 import analysis.BlobAnalysis;
 import analysis.HistogramAnalysis;
 import analysis.OpticalFlowAnalysis;
 import analysis.SequencerAnalysis;
-import controlP5.CallbackEvent;
-import controlP5.CallbackListener;
-import controlP5.ControlP5;
-import controlP5.Controller;
 import netP5.NetAddress;
 import oscP5.OscMessage;
 import oscP5.OscP5;
@@ -34,6 +30,7 @@ public class Main extends PApplet {
 	// OSC
 	private OscP5 osc;
 	private NetAddress supercollider;
+	private NetAddress rhizome;
 
 	// Config
 	private Config cfg;
@@ -45,26 +42,30 @@ public class Main extends PApplet {
 	private File[] movies;
 	private int whichMovie = 0;
 	private final boolean bgsubDefault = false;
-	private PImage bgImage;
 	private BgSubtract bgsub;
-	private float mLocation;
-
-	private boolean webcamChanged = false;
-	private boolean whichMovieChanged = false;
-	private boolean mLocationChanged = false;
+	private Mask mask;
+	private boolean display_enabled = true;
 
 	// Analyses
 	ArrayList<BaseAnalysis> analyses = new ArrayList<BaseAnalysis>();
 
-	// Control panel
-	ControlFrame cf;
-	CallbackListener cb;
+	// Control
+	private ConsoleConfig console;
+	// Commands are used because OSC messages arrive in a different thread,
+	// which is not allowed to draw on the screen. So instead of drawing
+	// immediately, we store the command, and use it later inside the main
+	// graphics thread (draw loop).
+	private boolean webcamChanged = false;
+	private boolean whichMovieChanged = false;
+	private boolean takeScreenshot = false;
+	private boolean setBg = false;
+	private boolean sendMovieList = false;
 
 	// In Processing 3 you specify size() inside settings()
 	@Override
 	public void settings() {
-		// size(600, 600);
-		fullScreen();
+		size(640, 480);
+		// fullScreen(P2D);
 	}
 
 	@Override
@@ -80,21 +81,31 @@ public class Main extends PApplet {
 		useWebcam = cfg.useWebcam;
 
 		// OSC
-		osc = new OscP5(this, 12000);
+		osc = new OscP5(this, cfg.listenOnPort);
+
 		supercollider = new NetAddress(cfg.supercolliderIp,
 				cfg.supercolliderPort);
 
+		rhizome = new NetAddress(cfg.rhizomeIp, cfg.rhizomePort);
+
+		// Subscribe to Rhizome.
+		OscMessage subscribeMsg = new OscMessage("/sys/subscribe");
+		subscribeMsg.add(cfg.listenOnPort);
+		subscribeMsg.add("/p5");
+		osc.send(subscribeMsg, rhizome);
+		
+		// Console Config
+		console = new ConsoleConfig();
+
 		// Process
 		bgsub = new BgSubtract(this, bgsubDefault);
-		if (Files.exists(Paths.get(cfg.dataPath, cfg.bgImageFile))) {
-			bgImage = loadImage(
-					Paths.get(cfg.dataPath, cfg.bgImageFile).toString());
-		}
-		bgsub.setBGImage(bgImage);
+		bgsub.load(Paths.get(cfg.dataPath, cfg.bgImageFile));
 
+		mask = new Mask(this, false);
+
+		analyses.add(new OpticalFlowAnalysis(this));
 		analyses.add(new HistogramAnalysis(this));
 		// analyses.add(new FrameDiffAnalysis(this));
-		analyses.add(new OpticalFlowAnalysis(this));
 		analyses.add(new SequencerAnalysis(this));
 		analyses.add(new BlobAnalysis(this));
 
@@ -103,56 +114,30 @@ public class Main extends PApplet {
 		File path = new File(cfg.moviePath);
 		if (path.isDirectory()) {
 			movies = path.listFiles();
+			if (movies != null) {
+				String[] ll = new String[movies.length];
+				for (int i = 0; i < movies.length; i++) {
+					ll[i] = movies[i].getName();
+				}
+				console.movieList = ll;
+			}
 		}
 		if (useWebcam) {
 			video = new AltMovieWebcam(this);
-			video.play(cfg.webcamId);
+			video.play(cfg.webcamWidth, cfg.webcamHeight, cfg.webcamName,
+					cfg.webcamFPS);
 		} else {
 			if (movies != null) {
 				video = new AltMovieFile(this);
 				video.play(movies[whichMovie].getAbsolutePath());
 			}
 		}
-
-		cb = new CallbackListener() {
-			@Override
-			public void controlEvent(CallbackEvent e) {
-				if (e.getAction() == ControlP5.ACTION_BROADCAST) {
-					Controller<?> c = e.getController();
-					String name = c.getName();
-					if (name.equals("movies")) {
-						whichMovie = (int) c.getValue();
-						whichMovieChanged = true;
-					} else if (name
-							.startsWith(ControlFrame.TOGGLE_ANALYSIS_LABEL)) {
-						analyses.get(c.getId()).toggleEnabled();
-					} else if (name.equals("bgsub")) {
-						bgsub.toggleEnabled();
-					} else if (name.equals("webcam")) {
-						useWebcam = c.getValue() != 0.;
-						webcamChanged = true;
-					} else if (name.equals("movieLocation")) {
-						mLocation = c.getValue();
-						mLocationChanged = true;
-					}
-				}
-			}
-		};
-
-		cf = new ControlFrame();
-		cf.setAnalyses(analyses);
-		cf.setMovies(movies, whichMovie);
-		cf.setBgSub(bgsubDefault);
-		cf.setWebcam(useWebcam);
-		cf.setMovieLocation(0);
-		cf.setCallback(cb);
 	}
 
-	private void update() {
+	private void updateVideoSource() {
 		if (whichMovieChanged) {
 			if (useWebcam) {
 				useWebcam = false;
-				cf.setWebcam(useWebcam);
 				video.stop();
 				video = new AltMovieFile(this);
 			} else {
@@ -170,7 +155,8 @@ public class Main extends PApplet {
 			video.stop();
 			if (useWebcam) {
 				video = new AltMovieWebcam(this);
-				video.play(cfg.webcamId);
+				video.play(cfg.webcamWidth, cfg.webcamHeight, cfg.webcamName,
+						cfg.webcamFPS);
 			} else {
 				video = new AltMovieFile(this);
 				video.play(movies[whichMovie].getAbsolutePath());
@@ -184,35 +170,85 @@ public class Main extends PApplet {
 		}
 	}
 
+	private void rebroadcastConsoleState() {
+		sendOsc("/panel/p5", 1, rhizome);
+		sendOsc("/panel/webcam", useWebcam ? 1 : 0, rhizome);
+		sendOsc("/panel/movies", whichMovie, rhizome);
+		sendOsc("/panel/video_time", console.video_time, rhizome);
+		sendOsc("/panel/display_enabled", console.display_enabled ? 1 : 0, rhizome);
+		sendOsc("/panel/mask_enabled", console.mask_enabled ? 1 : 0, rhizome);
+		sendOsc("/panel/a_of", analyses.get(0).isEnabled() ? 1 : 0, rhizome);
+		sendOsc("/panel/a_hist", analyses.get(1).isEnabled() ? 1 : 0, rhizome);
+		sendOsc("/panel/a_seq", analyses.get(2).isEnabled() ? 1 : 0, rhizome);
+		sendOsc("/panel/a_blob", analyses.get(3).isEnabled() ? 1 : 0, rhizome);
+		sendOsc("/panel/bgsub", console.bgsub ? 1 : 0, rhizome);
+		sendOsc("/panel/of_regression",console.of_regression, rhizome);
+		sendOsc("/panel/of_smoothness",console.of_smoothness, rhizome);
+	}
+	
 	@Override
 	public void draw() {
-		if (mLocationChanged) {
-			video.setPos(mLocation);
-			mLocationChanged = false;
-		} else {
-			cf.setMovieLocation(video.currPos());
-		}
-		update();
+		updateVideoSource();
 
 		if (!video.available()) {
 			return;
 		}
-
+		
 		PImage v = video.getImg().copy();
-		if (bgsub.isEnabled() & bgImage != null) {
-			v = bgsub.subtract(v);
+
+		if (sendMovieList) {
+			OscMessage msg = new OscMessage("/conf/movies");
+			for (int i = 0; i < console.movieList.length; i++) {
+				msg.add(console.movieList[i]);
+			}
+			osc.send(msg, rhizome);
+			sendMovieList = false;
 		}
-		image(v, 0, 0, width, height);
+
+		if (takeScreenshot) {
+			String fname = cfg.screenshotPath;
+			v.save(fname);
+			sendOsc("/panel/screenshot", 1, rhizome);
+			takeScreenshot = false;
+		}
+		// rebroadcast console state
+		// Update panel only every 10 frames to reduce network traffic.
+		if (frameCount % 10 == 0) {
+			rebroadcastConsoleState();
+			console.video_time = video.currPos();
+		}
+
+		if (setBg) {
+			bgsub.save(v);		
+			setBg = false;
+		}
+		if (bgsub.isEnabled()) {
+			bgsub.process(v);
+		}
+		if (mask.isEnabled()) {
+			if (mask.isInitialized()) {
+				mask.process(v);
+			} else {
+				mask.initialize(v.width, v.height, video.getFrameRate());
+				mask.load(Paths.get(cfg.dataPath, cfg.maskImageFile));
+			}
+		}
+		if (display_enabled) {
+			image(v, 0, 0, width, height);
+		}
 
 		// Run all analyses
 		for (BaseAnalysis analysis : analyses) {
 			if (analysis.isInitialized()) {
 				if (analysis.isEnabled()) {
 					analysis.analyze(v);
-					analysis.draw();
-					sendOsc(analysis.getOSCmsg());
+					if (display_enabled) {
+						analysis.draw();
+					}
+					sendOsc(analysis.getOSCmsg(), supercollider);
 				}
 			} else {
+				println(v.width,v.height);
 				analysis.initialize(v.width, v.height, video.getFrameRate());
 			}
 		}
@@ -225,26 +261,106 @@ public class Main extends PApplet {
 		PApplet.main(options);
 	}
 
-	private void sendOsc(OscMessage msg) {
+	private void sendOsc(OscMessage msg, NetAddress to) {
 		if (msg != null) {
-			osc.send(msg, supercollider);
+			osc.send(msg, to);
 		}
 	}
 
-	@Override
-	public void keyPressed() {
-		switch (key) {
-			case 'b':
-			case 'B':
-				bgImage = video.getImg();
-				bgImage.save(
-						Paths.get(cfg.dataPath, cfg.bgImageFile).toString());
-				bgsub.setBGImage(bgImage);
+	private void sendOsc(String path, float val, NetAddress to) {
+		OscMessage msg = new OscMessage(path);
+		msg.add(val);
+		osc.send(msg, to);
+	}
+	private void sendOsc(String path, boolean val, NetAddress to) {
+		OscMessage msg = new OscMessage(path);
+		msg.add(val);
+		osc.send(msg, to);
+	}
+	private void sendOsc(String path, double val, NetAddress to) {
+		OscMessage msg = new OscMessage(path);
+		msg.add(val);
+		osc.send(msg, to);
+	}
+
+	// It's good to implement an OscEventListener.
+	// It's a bit more verbose than oscEvent(), but
+	// this way OSC error messages are much clearer.
+	// Without it, errors are catched inside oscP5
+	// and we have no clue of knowing what's going
+	// wrong.
+	public void oscEvent(OscMessage msg) {
+		println(msg.toString());
+		float val = 0;
+		if (msg.checkTypetag("f")) {
+			val = msg.get(0).floatValue();
+		}
+		switch (msg.addrPattern()) {
+			case "/sys/subscribed":
+				println("subscribed to Rhizome");
 				break;
-			case 's':
-			case 'S':
-				save("/tmp/" + System.currentTimeMillis() + ".png");
+			case "/p5/a_of":
+				analyses.get(0).setEnabled(val > 0.5);
 				break;
+			case "/p5/a_hist":
+				analyses.get(1).setEnabled(val > 0.5);
+				break;
+			case "/p5/a_seq":
+				analyses.get(2).setEnabled(val > 0.5);
+				break;
+			case "/p5/a_blob":
+				analyses.get(3).setEnabled(val > 0.5);
+				break;
+			case "/p5/bgsub":
+				bgsub.setEnabled(val > 0.5);
+				console.bgsub = bgsub.isEnabled();
+				break;
+			case "/p5/mask_enabled":
+				mask.setEnabled(val > 0.5);
+				console.mask_enabled = mask.isEnabled();
+				break;
+			case "/p5/clear_mask":
+				mask.clear();
+				break;
+			case "/p5/add_mask_point":
+				mask.setClick(msg.get(0).floatValue(), msg.get(1).floatValue());
+				mask.drawDot();
+				break;
+			case "/p5/set_bg":
+				setBg = true;
+				break;
+			case "/p5/screenshot":
+				takeScreenshot = true;
+				break;
+			case "/p5/display_enabled":
+				display_enabled = val > 0.5;
+				console.display_enabled = display_enabled;
+				break;
+			case "/p5/of_regression":
+				analyses.get(0).setParams(0, val);
+				console.of_regression = val;
+				break;
+			case "/p5/of_smoothness":
+				analyses.get(0).setParams(1, val);
+				console.of_smoothness = val;
+				break;
+			case "/p5/video_time":
+				video.setPos(val);
+				console.video_time = val;
+				break;
+			case "/p5/webcam":
+				useWebcam = val == 1;
+				webcamChanged = true;
+				break;
+			case "/p5/movies":
+				whichMovie = round(val);
+				whichMovieChanged = true;
+				break;
+			case "/conf/movies":
+				sendMovieList = true;
+				break;
+			default:
+				println("unexpected message received: " + msg);
 		}
 	}
 }
