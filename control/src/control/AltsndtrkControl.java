@@ -135,6 +135,14 @@ public class AltsndtrkControl extends PApplet {
 				isPress.put(thisName, false);
 				yPos+=cc.textSize+5;
 				break;
+			case BANG:  
+				cp5.addBang(thisName)
+				.setLabel(cc.ctrlLabels.get(thisName))
+				.setPosition(xPos, yPos);
+				
+				isPress.put(thisName, false);
+				yPos+=cc.yHeight+cc.yGap;
+				break;
 			case TOGGLE:  
 				cp5.addToggle(thisName)
 				.setLabel(cc.ctrlLabels.get(thisName))
@@ -182,17 +190,14 @@ public class AltsndtrkControl extends PApplet {
 		cp5.addCallback(new CallbackListener() {
 			public void controlEvent(CallbackEvent e) {
 				if (e.getAction() == ControlP5.ACTION_RELEASE) {
-//				if (e.getAction() == ControlP5.EVENT) {
 					Controller<?> c = e.getController();
 					String name = c.getName();
 					sendOsc(name, c.getValue());
 					isPress.put(name, false);
-//					println(name, isPress.get(name));
 				} else if (e.getAction() == ControlP5.ACTION_PRESS) {
 					Controller<?> c = e.getController();
 					String name = c.getName();
 					isPress.put(name, true);
-//					println(name, isPress.get(name));
 				}
 			}
 		});
@@ -222,6 +227,7 @@ public class AltsndtrkControl extends PApplet {
 							sendOscMessage(cc.configPathPrefix+"/"+addressToDropdownListNames.get(i).get(j),
 								(float) 1, oscTo.get(i));
 						}
+						sendOscMessage(cc.configPathPrefix+cc.initializeValues, (float) 1, oscTo.get(i));
 					} else {
 						for (int j=0; j<addressToDropdownListNames.get(i).size(); j++) {
 							cc.haveDropdownList.put(addressToDropdownListNames.get(i).get(j), false);

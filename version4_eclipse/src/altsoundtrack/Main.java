@@ -145,6 +145,8 @@ public class Main extends PApplet {
 			}
 			video.play(movies[whichMovie].getAbsolutePath());
 
+			sendOsc("/panel/movies", whichMovie, rhizome);
+			sendOsc("/panel/webcam", useWebcam ? 1 : 0, rhizome);
 			// Restart analyses, since video resolution
 			// might have changed
 			for (BaseAnalysis analysis : analyses) {
@@ -161,6 +163,7 @@ public class Main extends PApplet {
 				video = new AltMovieFile(this);
 				video.play(movies[whichMovie].getAbsolutePath());
 			}
+			sendOsc("/panel/webcam", useWebcam ? 1 : 0, rhizome);
 			// Restart analyses, since video resolution
 			// might have changed
 			for (BaseAnalysis analysis : analyses) {
@@ -170,20 +173,20 @@ public class Main extends PApplet {
 		}
 	}
 
-	private void rebroadcastConsoleState() {
-		sendOsc("/panel/p5", 1, rhizome);
-		sendOsc("/panel/webcam", useWebcam ? 1 : 0, rhizome);
-		sendOsc("/panel/movies", whichMovie, rhizome);
-		sendOsc("/panel/video_time", console.video_time, rhizome);
-		sendOsc("/panel/display_enabled", console.display_enabled ? 1 : 0, rhizome);
-		sendOsc("/panel/mask_enabled", console.mask_enabled ? 1 : 0, rhizome);
-		sendOsc("/panel/a_of", analyses.get(0).isEnabled() ? 1 : 0, rhizome);
-		sendOsc("/panel/a_hist", analyses.get(1).isEnabled() ? 1 : 0, rhizome);
-		sendOsc("/panel/a_seq", analyses.get(2).isEnabled() ? 1 : 0, rhizome);
-		sendOsc("/panel/a_blob", analyses.get(3).isEnabled() ? 1 : 0, rhizome);
-		sendOsc("/panel/bgsub", console.bgsub ? 1 : 0, rhizome);
-		sendOsc("/panel/of_regression",console.of_regression, rhizome);
-		sendOsc("/panel/of_smoothness",console.of_smoothness, rhizome);
+	private void rebroadcastConsoleState(NetAddress to) {
+		sendOsc("/panel/p5", 1, to);
+		sendOsc("/panel/webcam", useWebcam ? 1 : 0, to);
+		sendOsc("/panel/movies", whichMovie, to);
+		sendOsc("/panel/video_time", console.video_time, to);
+		sendOsc("/panel/display_enabled", console.display_enabled ? 1 : 0, to);
+		sendOsc("/panel/mask_enabled", console.mask_enabled ? 1 : 0, to);
+		sendOsc("/panel/a_of", analyses.get(0).isEnabled() ? 1 : 0, to);
+		sendOsc("/panel/a_hist", analyses.get(1).isEnabled() ? 1 : 0, to);
+		sendOsc("/panel/a_seq", analyses.get(2).isEnabled() ? 1 : 0, to);
+		sendOsc("/panel/a_blob", analyses.get(3).isEnabled() ? 1 : 0, to);
+		sendOsc("/panel/bgsub", console.bgsub ? 1 : 0, to);
+		sendOsc("/panel/of_regression",console.of_regression, to);
+		sendOsc("/panel/of_smoothness",console.of_smoothness, to);
 	}
 	
 	@Override
@@ -211,10 +214,10 @@ public class Main extends PApplet {
 			sendOsc("/panel/screenshot", 1, rhizome);
 			takeScreenshot = false;
 		}
-		// rebroadcast console state
 		// Update panel only every 10 frames to reduce network traffic.
 		if (frameCount % 10 == 0) {
-			rebroadcastConsoleState();
+			sendOsc("/panel/p5", 1, rhizome);
+			sendOsc("/panel/video_time", console.video_time, rhizome);
 			console.video_time = video.currPos();
 		}
 
@@ -248,7 +251,6 @@ public class Main extends PApplet {
 					sendOsc(analysis.getOSCmsg(), supercollider);
 				}
 			} else {
-				println(v.width,v.height);
 				analysis.initialize(v.width, v.height, video.getFrameRate());
 			}
 		}
@@ -290,7 +292,7 @@ public class Main extends PApplet {
 	// and we have no clue of knowing what's going
 	// wrong.
 	public void oscEvent(OscMessage msg) {
-		println(msg.toString());
+//		println(msg.toString());
 		float val = 0;
 		if (msg.checkTypetag("f")) {
 			val = msg.get(0).floatValue();
@@ -298,26 +300,33 @@ public class Main extends PApplet {
 		switch (msg.addrPattern()) {
 			case "/sys/subscribed":
 				println("subscribed to Rhizome");
+				rebroadcastConsoleState(rhizome);
 				break;
 			case "/p5/a_of":
 				analyses.get(0).setEnabled(val > 0.5);
+				sendOsc("/panel/a_of", val, rhizome);
 				break;
 			case "/p5/a_hist":
 				analyses.get(1).setEnabled(val > 0.5);
+				sendOsc("/panel/a_hist", val, rhizome);
 				break;
 			case "/p5/a_seq":
 				analyses.get(2).setEnabled(val > 0.5);
+				sendOsc("/panel/a_seq", val, rhizome);
 				break;
 			case "/p5/a_blob":
 				analyses.get(3).setEnabled(val > 0.5);
+				sendOsc("/panel/a_blob", val, rhizome);
 				break;
 			case "/p5/bgsub":
 				bgsub.setEnabled(val > 0.5);
 				console.bgsub = bgsub.isEnabled();
+				sendOsc("/panel/bgsub", val, rhizome);
 				break;
 			case "/p5/mask_enabled":
 				mask.setEnabled(val > 0.5);
 				console.mask_enabled = mask.isEnabled();
+				sendOsc("/panel/mask_enabled", val, rhizome);
 				break;
 			case "/p5/clear_mask":
 				mask.clear();
@@ -335,14 +344,17 @@ public class Main extends PApplet {
 			case "/p5/display_enabled":
 				display_enabled = val > 0.5;
 				console.display_enabled = display_enabled;
+				sendOsc("/panel/display_enabled", val, rhizome);
 				break;
 			case "/p5/of_regression":
 				analyses.get(0).setParams(0, val);
 				console.of_regression = val;
+				sendOsc("/panel/of_regression",val, rhizome);
 				break;
 			case "/p5/of_smoothness":
 				analyses.get(0).setParams(1, val);
 				console.of_smoothness = val;
+				sendOsc("/panel/of_smoothness",val, rhizome);
 				break;
 			case "/p5/video_time":
 				video.setPos(val);
@@ -354,10 +366,18 @@ public class Main extends PApplet {
 				break;
 			case "/p5/movies":
 				whichMovie = round(val);
+				sendOsc("/panel/movies", whichMovie, rhizome);
+				sendOsc("/panel/webcam", 0, rhizome);
 				whichMovieChanged = true;
 				break;
 			case "/conf/movies":
 				sendMovieList = true;
+				break;
+			case "/conf/init":
+				rebroadcastConsoleState(rhizome);
+				break;
+			case "/p5/init":
+				rebroadcastConsoleState(rhizome);
 				break;
 			default:
 				println("unexpected message received: " + msg);

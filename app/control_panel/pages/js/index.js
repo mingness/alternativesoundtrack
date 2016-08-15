@@ -6,10 +6,14 @@ nx.onload = function() {
 
   for (var key in nx.widgets) {
     var w = nx.widgets[key];
-    // set scrollbars to relative
-    if(w.mode == 'absolute') {
-      w.mode = 'relative';
-    }
+//    // set scrollbars to relative
+//    if(w.mode == 'absolute') {
+//      w.mode = 'relative';
+//    }
+ //   // set scrollbars to absolute
+//    if(w.mode == 'relative') {
+//      w.mode = 'absolute';
+//    }
     // set buttons to impulse
     if(w.mode == 'aftertouch') {
       w.mode = 'impulse';
@@ -25,14 +29,14 @@ nx.onload = function() {
 var maskCanvas, maskContext, screenshot;
 var prPingTime, scPingTime = new Date().getTime();
 
-function send_pr_state() {
+function set_pr_state() {
   if ((new Date().getTime() - prPingTime) < 3000) { 
     $('#pr_on').text("Running");
   } else {
     $('#pr_on').text("OFF");
   }
 }
-function send_sc_state() {
+function set_sc_state() {
   if ((new Date().getTime() - scPingTime) < 1000) { 
     $('#sc_on').text("Running");
   } else {
@@ -50,7 +54,8 @@ $(function() {
       throw err
     }
 
-    rhizome.send('/sys/subscribe', ['/panel'])
+    rhizome.send('/sys/subscribe', ['/panel']);
+    rhizome.send('/p5/init', [1]);
   });
 
   rhizome.on('message', function(address, args) {
@@ -70,6 +75,9 @@ $(function() {
         };
         screenshot.src = 'screenshot/screenshot.jpg?' + Math.random();
       }, 200);
+    }
+    if(address === '/panel/webcam') {
+      nx.widgets['/p5/webcam'].set({value: args[0]});
     }
     if(address === '/panel/a_of') {
       nx.widgets['/p5/a_of'].set({value: args[0]});
@@ -111,7 +119,8 @@ $(function() {
   });
 
   rhizome.on('connected', function() {
-    alert('connected!')
+    alert('connected!');
+//    rhizome.send('/conf/init', [1]);
   });
 
   rhizome.on('connection lost', function() {
@@ -153,6 +162,6 @@ $(function() {
   $('#mask').on('click', maskClick);
   $('#mask').on('touch', maskClick);
 
-  setInterval(send_pr_state, 1000);
-  setInterval(send_sc_state, 1000);
+  setInterval(set_pr_state, 1000);
+  setInterval(set_sc_state, 1000);
 });

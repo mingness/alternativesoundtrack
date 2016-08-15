@@ -24,10 +24,11 @@ import processing.core.PApplet;
 public class ControlConfig extends PApplet {
 	static int STATUS = -1;
 	static int TEXT = 0;
-	static int TOGGLE = 1;
-	static int SLIDER = 2;
-	static int DROPDOWN = 3;
-	enum ControlType {TOGGLE, SLIDER, DROPDOWN, TEXT, STATUS};
+	static int BANG = 1;
+	static int TOGGLE = 2;
+	static int SLIDER = 3;
+	static int DROPDOWN = 4;
+	enum ControlType {BANG, TOGGLE, SLIDER, DROPDOWN, TEXT, STATUS};
 	ArrayList<String> ctrlNames = new ArrayList<String>();
 	HashMap<String,ControlType> ctrlTypes = new HashMap<String,ControlType>();
 	HashMap<String,String> ctrlLabels = new HashMap<String,String>();
@@ -41,13 +42,14 @@ public class ControlConfig extends PApplet {
 	int listenOnPort;
 	String listenPathPrefix;
 	String configPathPrefix;
+	String initializeValues;
 	ArrayList<String> oscIps = new ArrayList<String>();
 	ArrayList<Integer> oscPorts = new ArrayList<Integer>();
 	ArrayList<String> oscPathPrefixes = new ArrayList<String>();
 
 	//formatting 
 	int xSize = 300;
-	int ySize = 600;
+	int ySize = 800;
 	int xStart = 20;
 	int yStart = 10;
 	int xStep = 180;
@@ -65,6 +67,7 @@ public class ControlConfig extends PApplet {
 		// make sure these prefixes are not a substring of the other
 		this.listenPathPrefix = "/panel"; //prefix that altsndtrk sends to broadcast current values for controls
 		this.configPathPrefix = "/conf"; //prefix that altsndtrk sends for configuration
+		this.initializeValues = "/init"; //address that asks for initial values
 		//OUT
 		int TOaltsndtrk = 0;
 		int TOsupercollider = 1;
@@ -104,15 +107,18 @@ public class ControlConfig extends PApplet {
 				TOaltsndtrk);
 		// Tweak
 		this.initElement("tweaks_heading", ControlType.TEXT, "Tweaks",
-		TOaltsndtrk);
+				TOaltsndtrk);
+		this.initElement("display_enabled", ControlType.TOGGLE, "Display Enabled (off for exhibition)",
+				TOaltsndtrk);
 		this.initElement("bgsub", ControlType.TOGGLE, "Background Subtraction",
 				TOaltsndtrk);
-		this.initElement("of_regression", ControlType.SLIDER, "Optical Flow regression",
-		TOaltsndtrk);
-		this.initElement("of_smoothness", ControlType.SLIDER, "Optical Flow Smooth",
-		TOaltsndtrk);
-//		// Mask
-//		this.initElement("displayEnabled", ControlType.TOGGLE, "Display");	
+		this.initElement("set_bg", ControlType.BANG, "Set Background",
+				TOaltsndtrk);
+		this.initElement("of_regression", ControlType.SLIDER, 
+				"Optical Flow regression (more for noisy video)", TOaltsndtrk);
+		this.initElement("of_smoothness", ControlType.SLIDER, 
+				"Optical Flow Smooth (less for slow decay)", TOaltsndtrk);
+		// Supercollider
 		this.initElement("status_sc", ControlType.STATUS, "Supercollider - ",
 				TOsupercollider);
 	}
